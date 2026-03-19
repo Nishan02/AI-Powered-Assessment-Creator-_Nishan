@@ -11,7 +11,7 @@ export const generateAssessment = async (
 ) => {
   // Using gemini-1.5-pro or flash. Both support JSON mode natively.
   const model = genAI.getGenerativeModel({
-    model: 'gemini-1.5-flash',
+    model: 'gemini-2.5-flash',
     generationConfig: {
       responseMimeType: 'application/json', // This guarantees a JSON response
     },
