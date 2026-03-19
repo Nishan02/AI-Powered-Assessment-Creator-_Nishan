@@ -9,7 +9,9 @@ import fs from 'fs';
 
 dotenv.config();
 
-const connection = new IORedis(process.env.REDIS_URL || 'redis://127.0.0.1:6379');
+const connection = new IORedis(process.env.REDIS_URL || 'redis://127.0.0.1:6379', {
+  maxRetriesPerRequest: null
+});
 
 export const assignmentWorker = new Worker(
   'assignment-generation',
