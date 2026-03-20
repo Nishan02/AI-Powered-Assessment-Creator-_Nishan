@@ -6,21 +6,21 @@ import EmptyState from '@/components/EmptyState';
 import { useAssignmentStore } from '@/store/useAssignmentStore';
 import AssignmentForm from '@/components/AssignmentForm';
 import AssignmentListener from '@/components/AssignmentListener';
+import OutputPaper from '@/components/OutputPaper';
 
 
 export default function DashboardPage() {
   const { view, setView } = useAssignmentStore();
 
   return (
-    <div className="flex h-screen bg-[#f8f9fa] overflow-hidden">
-      {/* Sidebar */}
-      <Sidebar />
+  <div className="flex h-screen bg-[#f8f9fa] overflow-hidden print:h-auto print:overflow-visible print:bg-white">
 
-      {/* Main Content Area */}
-      <div className="flex-1 flex flex-col h-screen overflow-hidden">
+   <Sidebar />
+
+   <div className="flex-1 flex flex-col h-screen overflow-hidden print:h-auto print:overflow-visible">
         
         {/* Top Header */}
-        <header className="h-16 bg-white/50 backdrop-blur-sm border-b border-gray-200 flex items-center justify-between px-6 shrink-0">
+        <header className="h-16 bg-white/50 backdrop-blur-sm border-b border-gray-200 flex items-center justify-between px-6 shrink-0 print:hidden" >
           <div className="flex items-center gap-2">
             <button className="p-1 hover:bg-gray-100 rounded-md text-gray-600 transition-colors">
               <ArrowLeft size={20} />
@@ -45,7 +45,7 @@ export default function DashboardPage() {
 
         {/* Dynamic Content Body */}
         {/* Dynamic Content Body */}
-        <main className="flex-1 overflow-y-auto relative p-8">
+        <main className="flex-1 overflow-y-auto relative p-8 print:p-0 print:overflow-visible">
           <AssignmentListener />
           
           {view === 'empty' && <EmptyState />}
@@ -62,11 +62,18 @@ export default function DashboardPage() {
           )}
 
           {view === 'completed' && (
-            <div className="text-center mt-20">
-              <h2 className="text-3xl font-bold text-green-600">Success! Paper Generated.</h2>
-              <p className="mt-2 text-gray-600">The beautiful output paper is coming next.</p>
-            </div>
-          )}
+  <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <OutputPaper />
+    <div className="text-center mt-6">
+      <button 
+        onClick={() => setView('empty')} 
+        className="text-sm text-gray-500 hover:text-gray-800 underline print-hidden"
+      >
+        Create Another Assignment
+      </button>
+    </div>
+  </div>
+)}
         </main>
 
       </div>

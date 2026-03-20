@@ -7,7 +7,7 @@ export default function Sidebar() {
   const setView = useAssignmentStore((state) => state.setView);
 
   return (
-    <aside className="w-[280px] h-screen bg-white border-r border-gray-200 flex flex-col justify-between p-4 hidden md:flex shrink-0">
+    <aside className="w-[280px] h-screen bg-white border-r border-gray-200 flex flex-col justify-between p-4 hidden md:flex shrink-0 print:hidden">
       
       {/* Top Section */}
       <div>
