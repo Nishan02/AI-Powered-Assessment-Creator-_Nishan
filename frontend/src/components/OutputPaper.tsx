@@ -96,6 +96,18 @@ export default function OutputPaper() {
                       <span className="font-bold ml-2">
                         [{q.marks} {q.marks === 1 ? 'Mark' : 'Marks'}]
                       </span>
+                      {/* --- ADD THIS NEW BLOCK --- */}
+                      {q.options && q.options.length > 0 && (
+                        <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2 pl-4">
+                          {q.options.map((opt: string, optIndex: number) => (
+                            <div key={optIndex} className="text-gray-800">
+                              {/* Converts 0,1,2,3 to a), b), c), d) */}
+                              <span className="font-medium mr-2">{String.fromCharCode(97 + optIndex)})</span> 
+                              {opt}
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))}

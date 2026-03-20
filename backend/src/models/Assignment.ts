@@ -2,8 +2,9 @@ import mongoose, { Schema, Document } from 'mongoose';
 
 export interface IQuestion {
   text: string;
-  difficulty: 'Easy' | 'Moderate' | 'Hard';
+  difficulty: 'Easy' | 'Moderate' | 'Challenging';
   marks: number;
+  options?: string[];
 }
 
 export interface ISection {
@@ -27,8 +28,9 @@ export interface IAssignment extends Document {
 
 const QuestionSchema = new Schema<IQuestion>({
   text: { type: String, required: true },
-  difficulty: { type: String, enum: ['Easy', 'Moderate', 'Hard'], required: true },
-  marks: { type: Number, required: true }
+  difficulty: { type: String, enum: ['Easy', 'Moderate', 'Challenging'], required: true },
+  marks: { type: Number, required: true },
+  options: [{ type: String }]
 });
 
 const SectionSchema = new Schema<ISection>({

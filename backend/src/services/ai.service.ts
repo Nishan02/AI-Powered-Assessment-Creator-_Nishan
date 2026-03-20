@@ -40,6 +40,7 @@ export const generateAssessment = async (
           "questions": [
             {
               "text": "String (The actual question)",
+              "options": ["String", "String", "String", "String"],
               "difficulty": "String (Must be exactly 'Easy', 'Moderate', or 'Hard')",
               "marks": Number
             }
