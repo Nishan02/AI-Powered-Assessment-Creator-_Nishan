@@ -53,7 +53,8 @@ export default function DashboardPage() {
       if (showLoader) setIsLoading(true);
 
       try {
-        const res = await fetch(`http://localhost:5000/api/assignments?ownerId=${encodeURIComponent(ownerId)}`);
+        const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+        const res = await fetch(`${API_URL}/api/assignments?ownerId=${encodeURIComponent(ownerId)}`);
         if (!res.ok) throw new Error('Failed to fetch assignments');
         const data = await res.json();
         setAssignments(data);
@@ -96,9 +97,10 @@ export default function DashboardPage() {
     if (isGuest && guestAssignmentIds.length > 0) {
       setIsLoading(true);
       try {
+        const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
         await Promise.all(
           guestAssignmentIds.map((id) =>
-            fetch(`http://localhost:5000/api/assignments/${id}?ownerId=${encodeURIComponent(ownerId)}`, { method: 'DELETE' })
+            fetch(`${API_URL}/api/assignments/${id}?ownerId=${encodeURIComponent(ownerId)}`, { method: 'DELETE' })
           )
         );
         clearGuestAssignments();

@@ -61,7 +61,8 @@ export default function AssignmentForm() {
 
       if (data.file && data.file.length > 0) formData.append('file', data.file[0]);
 
-      const response = await fetch('http://localhost:5000/api/assignments', {
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+      const response = await fetch(`${API_URL}/api/assignments`, {
         method: 'POST',
         body: formData,
       });
@@ -74,7 +75,7 @@ export default function AssignmentForm() {
 
       // Refresh local list immediately so newly created assignment appears without page refresh.
       const latestAssignments = await fetch(
-        `http://localhost:5000/api/assignments?ownerId=${encodeURIComponent(ownerId)}`
+        `${API_URL}/api/assignments?ownerId=${encodeURIComponent(ownerId)}`
       );
       if (latestAssignments.ok) {
         const latest = await latestAssignments.json();

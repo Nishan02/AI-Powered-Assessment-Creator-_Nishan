@@ -4,7 +4,8 @@ import { useEffect } from 'react';
 import { io } from 'socket.io-client';
 import { useAssignmentStore } from '@/store/useAssignmentStore';
 
-const socket = io('http://localhost:5000');
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+const socket = io(API_URL);
 
 export default function AssignmentListener() {
   const { assignmentId, view, setView, setGeneratedPaper, upsertAssignment } = useAssignmentStore();
