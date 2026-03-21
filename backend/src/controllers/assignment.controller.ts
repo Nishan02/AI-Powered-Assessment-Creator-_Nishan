@@ -48,8 +48,8 @@ export const createAssignment = async (req: Request, res: Response): Promise<voi
     });
 
   } catch (error) {
-    console.error('Error creating assignment:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error('Error creating assignment:', error instanceof Error ? error.message : error);
+    res.status(500).json({ error: error instanceof Error ? error.message : 'Internal server error' });
   }
 };
 
@@ -65,8 +65,8 @@ export const getAssignments = async (req: Request, res: Response): Promise<void>
     const assignments = await Assignment.find({ ownerId }).sort({ createdAt: -1 });
     res.status(200).json(assignments);
   } catch (error) {
-    console.error('Error fetching assignments:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error('Error fetching assignments:', error instanceof Error ? error.message : error);
+    res.status(500).json({ error: error instanceof Error ? error.message : 'Internal server error' });
   }
 };
 

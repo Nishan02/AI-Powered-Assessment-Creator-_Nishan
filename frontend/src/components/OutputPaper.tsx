@@ -2,6 +2,7 @@
 
 import { Download } from 'lucide-react';
 import { useAssignmentStore } from '@/store/useAssignmentStore';
+import { useRef } from 'react';
 
 interface QuestionOption {
   text?: string;
@@ -18,9 +19,32 @@ interface Section {
 
 export default function OutputPaper() {
   const { generatedPaper, schoolName } = useAssignmentStore();
+  const printableRef = useRef<HTMLDivElement>(null);
 
-  const handleDownloadPDF = () => {
-    window.print();
+  const handleDownloadPDF = async () => {
+    if (!printableRef.current) return;
+
+    try {
+      // Dynamically import html2pdf
+      const html2pdf = (await import('html2pdf.js')).default;
+
+      const element = printableRef.current;
+      const filename = `${generatedPaper?.title || 'Assignment'}-${new Date().getTime()}.pdf`;
+
+      const options = {
+        margin: 10,
+        filename: filename,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true },
+        jsPDF: { orientation: 'portrait', unit: 'mm', format: 'a4' },
+        pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+      };
+
+      await html2pdf().set(options).from(element).save();
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      alert('Failed to generate PDF. Please try again.');
+    }
   };
 
   if (!generatedPaper) return null;
@@ -31,7 +55,7 @@ export default function OutputPaper() {
 
   return (
     <div className="w-full max-w-5xl mx-auto mt-4 mb-20 rounded-3xl overflow-hidden shadow-xl border border-gray-200">
-      <div className="bg-[#1f2022] text-white p-4 md:p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 print:hidden">
+      <div className="bg-[#1f2022] text-white p-4 md:p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
         <p className="text-xs md:text-sm font-medium leading-relaxed max-w-2xl">
           Here is your customized question paper generated from your assignment inputs.
         </p>
@@ -44,59 +68,91 @@ export default function OutputPaper() {
         </button>
       </div>
 
-      <div id="printable-paper" className="bg-white text-black p-5 md:p-10">
-        <div className="text-center space-y-1 mb-8">
-          <h1 className="text-2xl md:text-4xl font-bold leading-tight">{selectedSchool}</h1>
-          <h2 className="text-base md:text-xl font-medium">Subject: {generatedPaper.title}</h2>
-          <h2 className="text-base md:text-xl">Class: {selectedClass}</h2>
+      <div 
+        ref={printableRef} 
+        style={{
+          backgroundColor: '#ffffff',
+          color: '#000000',
+          padding: '40px',
+          fontFamily: 'Arial, sans-serif',
+          lineHeight: '1.6'
+        }}
+      >
+        {/* Header */}
+        <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+          <h1 style={{ fontSize: '32px', fontWeight: 'bold', margin: '8px 0', color: '#000' }}>
+            {selectedSchool}
+          </h1>
+          <h2 style={{ fontSize: '18px', fontWeight: '500', margin: '4px 0', color: '#000' }}>
+            Subject: {generatedPaper.title}
+          </h2>
+          <h2 style={{ fontSize: '18px', margin: '4px 0', color: '#000' }}>
+            Class: {selectedClass}
+          </h2>
         </div>
 
-        <div className="flex justify-between text-xs md:text-sm font-medium mb-5">
+        {/* Time and Marks */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', fontWeight: '500', marginBottom: '20px' }}>
           <span>Time Allowed: {generatedPaper.duration || '1 Hour'}</span>
           <span>Maximum Marks: {generatedPaper.totalMarks}</span>
         </div>
 
-        <p className="text-xs md:text-sm mb-6 font-medium italic">
+        {/* Instructions */}
+        <p style={{ fontSize: '13px', marginBottom: '24px', fontWeight: '500', fontStyle: 'italic', color: '#000' }}>
           All questions are compulsory unless stated otherwise.
         </p>
 
-        <div className="space-y-3 text-xs md:text-sm mb-9">
-          <div className="flex items-end gap-2">
+        {/* Student Info */}
+        <div style={{ marginBottom: '36px', fontSize: '13px' }}>
+          <div style={{ display: 'flex', alignItems: 'flex-end', gap: '8px', marginBottom: '12px' }}>
             <span>Name:</span>
-            <div className="border-b border-black flex-1 max-w-[260px]"></div>
+            <div style={{ borderBottom: '1px solid #000', flex: 1, maxWidth: '260px' }}></div>
           </div>
-          <div className="flex items-end gap-2">
+          <div style={{ display: 'flex', alignItems: 'flex-end', gap: '8px', marginBottom: '12px' }}>
             <span>Roll Number:</span>
-            <div className="border-b border-black flex-1 max-w-[230px]"></div>
+            <div style={{ borderBottom: '1px solid #000', flex: 1, maxWidth: '230px' }}></div>
           </div>
-          <div className="flex items-end gap-2">
+          <div style={{ display: 'flex', alignItems: 'flex-end', gap: '8px' }}>
             <span>Class: {selectedClass}</span>
-            <span className="ml-3">Section: _________</span>
+            <span style={{ marginLeft: '12px' }}>Section: _________</span>
           </div>
         </div>
 
-        <div className="space-y-8">
+        {/* Questions Sections */}
+        <div>
           {sections.map((section, sIndex) => (
-            <div key={sIndex} className="space-y-4">
-              <div className="text-center">
-                <h3 className="font-bold text-base md:text-lg">{section.title || `Section ${sIndex + 1}`}</h3>
-                {section.instruction && <p className="text-xs md:text-sm italic mt-1">{section.instruction}</p>}
+            <div key={sIndex} style={{ marginBottom: '32px' }}>
+              <div style={{ textAlign: 'center', marginBottom: '16px' }}>
+                <h3 style={{ fontWeight: 'bold', fontSize: '16px', margin: '0', color: '#000' }}>
+                  {section.title || `Section ${sIndex + 1}`}
+                </h3>
+                {section.instruction && (
+                  <p style={{ fontSize: '13px', fontStyle: 'italic', margin: '4px 0 0 0', color: '#000' }}>
+                    {section.instruction}
+                  </p>
+                )}
               </div>
 
-              <div className="space-y-4">
+              <div>
                 {section.questions?.map((q, qIndex) => (
-                  <div key={qIndex} className="flex gap-2 text-xs md:text-sm leading-relaxed">
-                    <span className="font-medium shrink-0">{qIndex + 1}.</span>
+                  <div key={qIndex} style={{ display: 'flex', gap: '8px', marginBottom: '16px', fontSize: '13px', lineHeight: '1.6' }}>
+                    <span style={{ fontWeight: '500', flex: '0 0 auto' }}>{qIndex + 1}.</span>
                     <div>
-                      <span className="font-medium mr-2">[{q.difficulty || 'Moderate'}]</span>
-                      <span>{q.text}</span>
-                      <span className="font-bold ml-2">[{q.marks || 1} Marks]</span>
+                      <span style={{ fontWeight: '500', marginRight: '8px', color: '#000' }}>
+                        [{q.difficulty || 'Moderate'}]
+                      </span>
+                      <span style={{ color: '#000' }}>{q.text}</span>
+                      <span style={{ fontWeight: 'bold', marginLeft: '8px', color: '#000' }}>
+                        [{q.marks || 1} Marks]
+                      </span>
 
                       {q.options && q.options.length > 0 && (
-                        <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-1.5 pl-4">
+                        <div style={{ marginTop: '8px', paddingLeft: '16px' }}>
                           {q.options.map((opt: string, optIndex: number) => (
-                            <div key={optIndex} className="text-gray-900">
-                              <span className="font-medium mr-2">{String.fromCharCode(97 + optIndex)})</span>
+                            <div key={optIndex} style={{ color: '#000', marginBottom: '4px' }}>
+                              <span style={{ fontWeight: '500', marginRight: '8px' }}>
+                                {String.fromCharCode(97 + optIndex)})
+                              </span>
                               {opt}
                             </div>
                           ))}
@@ -110,7 +166,9 @@ export default function OutputPaper() {
           ))}
         </div>
 
-        <div className="mt-12 text-center text-sm font-bold">End of Question Paper</div>
+        <div style={{ marginTop: '48px', textAlign: 'center', fontSize: '13px', fontWeight: 'bold', color: '#000' }}>
+          End of Question Paper
+        </div>
       </div>
     </div>
   );
