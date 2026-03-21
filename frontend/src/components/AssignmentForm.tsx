@@ -13,6 +13,7 @@ interface QuestionRow {
 
 interface IFormInput {
   title: string;
+  className: string;
   dueDate: string;
   questionRows: QuestionRow[];
   additionalInstructions: string;
@@ -23,13 +24,13 @@ export default function AssignmentForm() {
   const { setAssignmentId, setView, isGuest, ownerId, addGuestAssignmentId } = useAssignmentStore();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const { register, control, handleSubmit, watch, formState: { errors } } = useForm<IFormInput>({
+  const { register, control, handleSubmit, watch } = useForm<IFormInput>({
     defaultValues: {
       questionRows: [{ type: 'Multiple Choice Questions', count: 4, marks: 1 }],
-    }
+    },
   });
-  const selectedFile = watch('file');
 
+  const selectedFile = watch('file');
   const { fields, append, remove } = useFieldArray({
     control,
     name: 'questionRows',
@@ -37,27 +38,27 @@ export default function AssignmentForm() {
 
   const watchedRows = useWatch({ control, name: 'questionRows' });
   const totalQuestions = watchedRows?.reduce((acc, row) => acc + (Number(row.count) || 0), 0) || 0;
-  const totalMarks = watchedRows?.reduce((acc, row) => acc + ((Number(row.count) || 0) * (Number(row.marks) || 0)), 0) || 0;
+  const totalMarks = watchedRows?.reduce((acc, row) => acc + (Number(row.count) || 0) * (Number(row.marks) || 0), 0) || 0;
 
   const onSubmit: SubmitHandler<IFormInput> = async (data) => {
     setIsSubmitting(true);
     try {
       if (!ownerId) throw new Error('Missing owner identity');
 
-      const questionTypes = Array.from(new Set(data.questionRows.map(r => r.type)));
+      const questionTypes = Array.from(new Set(data.questionRows.map((r) => r.type)));
 
       const formData = new FormData();
       formData.append('title', data.title);
+      formData.append('className', data.className);
       formData.append('dueDate', data.dueDate);
       formData.append('questionTypes', JSON.stringify(questionTypes));
       formData.append('totalQuestions', totalQuestions.toString());
       formData.append('totalMarks', totalMarks.toString());
       formData.append('ownerId', ownerId);
-      
-      const breakdownInfo = `Generate exactly: ${data.questionRows.map(r => `${r.count} ${r.type} (${r.marks} marks each)`).join(', ')}. `;
-      const finalInstructions = breakdownInfo + (data.additionalInstructions || '');
-      formData.append('additionalInstructions', finalInstructions);
-      
+
+      const breakdownInfo = `Generate exactly: ${data.questionRows.map((r) => `${r.count} ${r.type} (${r.marks} marks each)`).join(', ')}. `;
+      formData.append('additionalInstructions', breakdownInfo + (data.additionalInstructions || ''));
+
       if (data.file && data.file.length > 0) formData.append('file', data.file[0]);
 
       const response = await fetch('http://localhost:5000/api/assignments', {
@@ -65,14 +66,12 @@ export default function AssignmentForm() {
         body: formData,
       });
 
-      if (!response.ok) throw new Error('Failed to submit');
+      if (!response.ok) throw new Error('Failed to submit assignment');
 
       const result = await response.json();
       setAssignmentId(result.assignmentId);
-
       if (isGuest) addGuestAssignmentId(result.assignmentId);
       setView('loading');
-      
     } catch (error) {
       console.error(error);
       alert('Failed to submit assignment.');
@@ -82,168 +81,180 @@ export default function AssignmentForm() {
   };
 
   return (
-    <div className="max-w-[800px] mx-auto bg-white p-8 md:p-10 rounded-[32px] shadow-sm border border-gray-100">
-      
-      <div className="mb-8">
-        <h2 className="text-xl font-bold text-gray-900">Assignment Details</h2>
-        <p className="text-sm text-gray-500 mt-1">Basic information about your assignment</p>
+    <div className="max-w-5xl mx-auto pb-24">
+      <div className="mb-6">
+        <div className="flex items-center gap-2">
+          <span className="w-2.5 h-2.5 rounded-full bg-green-500"></span>
+          <h2 className="text-2xl md:text-3xl font-bold text-gray-900">Create Assignment</h2>
+        </div>
+        <p className="text-sm text-gray-500 mt-1">Set up a new assignment for your students.</p>
       </div>
-      
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
-        
-{/* File Upload Area */}
-        <div className="border-2 border-dashed border-gray-200 rounded-3xl p-10 flex flex-col items-center justify-center bg-gray-50/50 hover:bg-gray-50 transition-colors cursor-pointer relative">
-          <input 
-            type="file" 
-            accept=".pdf,.txt" 
-            {...register('file')} 
-            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20"
-          />
-          
-          <CloudUpload className={`w-10 h-10 mb-3 ${selectedFile && selectedFile.length > 0 ? 'text-green-500' : 'text-gray-400'}`} />
-          
-          {selectedFile && selectedFile.length > 0 ? (
-            <div className="text-center z-10 pointer-events-none">
-              <p className="font-bold text-green-600 text-sm">File Ready for AI</p>
-              <p className="text-gray-900 font-semibold text-sm mt-2 bg-white px-4 py-2 rounded-full border border-gray-200 shadow-sm inline-block">
-                📄 {selectedFile[0].name}
-              </p>
-              <p className="text-xs text-gray-400 mt-2">Click or drag again to replace</p>
-            </div>
-          ) : (
-            <div className="text-center z-10 pointer-events-none">
-              <p className="font-medium text-gray-900 text-sm">Choose a file or drag & drop it here</p>
-              <p className="text-xs text-gray-500 mt-1">PDF and TXT formats</p>
-              <button type="button" className="mt-4 px-4 py-2 bg-white border border-gray-200 rounded-full text-xs font-medium text-gray-900 shadow-sm">
-                Browse Files
-              </button>
-            </div>
-          )}
+
+      <div className="h-1.5 rounded-full bg-gray-200 mb-8 overflow-hidden">
+        <div className="h-full w-1/2 bg-gray-600 rounded-full"></div>
+      </div>
+
+      <div className="bg-white rounded-[28px] border border-gray-200 shadow-sm p-5 md:p-7">
+        <div className="mb-6">
+          <h3 className="text-xl font-bold text-gray-900">Assignment Details</h3>
+          <p className="text-sm text-gray-500 mt-1">Basic information about your assignment</p>
         </div>
 
-        {/* Title & Due Date Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <label className="block text-sm font-semibold text-gray-800 mb-2">Topic / Title</label>
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-7">
+          <div className="border-2 border-dashed border-gray-300 rounded-3xl p-8 md:p-10 flex flex-col items-center justify-center bg-gray-50 hover:bg-gray-100/60 transition-colors cursor-pointer relative">
             <input
-              type="text"
-              {...register('title', { required: 'Required' })}
-              // Added text-gray-900 and placeholder:text-gray-400
-              className="w-full px-4 py-3 bg-gray-50/50 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-gray-200 outline-none transition-all text-sm text-gray-900 placeholder:text-gray-400 font-medium"
-              placeholder="e.g., Data Structures"
+              type="file"
+              accept=".pdf,.txt,.jpg,.jpeg,.png"
+              {...register('file')}
+              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20"
             />
-          </div>
-          <div>
-            <label className="block text-sm font-semibold text-gray-800 mb-2">Due Date</label>
-            <input
-              type="date"
-              {...register('dueDate', { required: 'Required' })}
-              // Added text-gray-900
-              className="w-full px-4 py-3 bg-gray-50/50 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-gray-200 outline-none transition-all text-sm text-gray-900 font-medium"
-            />
-          </div>
-        </div>
 
-        {/* Dynamic Question Types */}
-        <div>
-          <div className="flex text-xs font-semibold text-gray-500 mb-3 px-2">
-            <div className="flex-1">Question Type</div>
-            <div className="w-20 text-center">No. of Questions</div>
-            <div className="w-20 text-center ml-4">Marks</div>
-          </div>
+            <CloudUpload className={`w-9 h-9 mb-3 ${selectedFile?.length ? 'text-green-600' : 'text-gray-400'}`} />
 
-          <div className="space-y-3">
-            {fields.map((field, index) => (
-              <div key={field.id} className="flex items-center gap-3">
-                <select
-                  {...register(`questionRows.${index}.type` as const)}
-                  // Added text-gray-900
-                  className="flex-1 px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl outline-none text-sm text-gray-900 font-medium appearance-none"
-                >
-                  <option value="Multiple Choice Questions">Multiple Choice Questions</option>
-                  <option value="Short Questions">Short Questions</option>
-                  <option value="Long Answer Questions">Long Answer Questions</option>
-                  <option value="Diagram/Graph-Based">Diagram/Graph-Based Questions</option>
-                  <option value="Numerical Problems">Numerical Problems</option>
-                </select>
-
-                <button 
-                  type="button" 
-                  onClick={() => remove(index)}
-                  className="p-2 text-gray-400 hover:text-red-500 transition-colors"
-                >
-                  <X size={18} />
-                </button>
-
-                <input
-                  type="number"
-                  min="1"
-                  {...register(`questionRows.${index}.count` as const)}
-                  // Added text-gray-900
-                  className="w-20 px-3 py-3 text-center bg-gray-50 border border-gray-200 rounded-2xl outline-none text-sm text-gray-900 font-semibold"
-                />
-
-                <input
-                  type="number"
-                  min="1"
-                  {...register(`questionRows.${index}.marks` as const)}
-                  // Added text-gray-900
-                  className="w-20 px-3 py-3 text-center bg-gray-50 border border-gray-200 rounded-2xl outline-none text-sm text-gray-900 font-semibold ml-1"
-                />
+            {selectedFile?.length ? (
+              <div className="text-center z-10 pointer-events-none">
+                <p className="font-semibold text-green-700 text-sm">File ready for upload</p>
+                <p className="text-gray-900 font-medium text-sm mt-2 bg-white px-4 py-2 rounded-full border border-gray-200 shadow-sm inline-block">
+                  {selectedFile[0].name}
+                </p>
+                <p className="text-xs text-gray-400 mt-2">Click or drag again to replace</p>
               </div>
-            ))}
+            ) : (
+              <div className="text-center z-10 pointer-events-none">
+                <p className="font-medium text-gray-900 text-sm">Choose a file or drag and drop it here</p>
+                <p className="text-xs text-gray-500 mt-1">PDF, TXT, JPG, PNG up to 10MB</p>
+                <button type="button" className="mt-4 px-4 py-2 bg-white border border-gray-200 rounded-full text-xs font-medium text-gray-900 shadow-sm">
+                  Browse Files
+                </button>
+              </div>
+            )}
           </div>
 
-          <button
-            type="button"
-            onClick={() => append({ type: 'Short Questions', count: 1, marks: 2 })}
-            className="flex items-center gap-2 mt-4 text-sm font-semibold text-gray-800 hover:text-black transition-colors"
-          >
-            <div className="bg-black text-white p-1 rounded-full"><Plus size={14} /></div>
-            Add Question Type
-          </button>
-        </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-5">
+            <div className="md:col-span-2">
+              <label className="block text-sm font-semibold text-gray-800 mb-2">Topic / Subject</label>
+              <input
+                type="text"
+                {...register('title', { required: 'Required' })}
+                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-gray-300 outline-none text-sm text-gray-900 font-medium"
+                placeholder="e.g. Science"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-gray-800 mb-2">Class</label>
+              <input
+                type="text"
+                {...register('className', { required: 'Required' })}
+                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-gray-300 outline-none text-sm text-gray-900 font-medium"
+                placeholder="e.g. 8th"
+              />
+            </div>
+            <div className="md:col-span-3">
+              <label className="block text-sm font-semibold text-gray-800 mb-2">Due Date</label>
+              <input
+                type="date"
+                {...register('dueDate', { required: 'Required' })}
+                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-gray-300 outline-none text-sm text-gray-900 font-medium"
+              />
+            </div>
+          </div>
 
-        {/* Totals Summary */}
-        <div className="flex flex-col items-end text-sm font-bold text-gray-900 space-y-1 pr-2">
-          <p>Total Questions: {totalQuestions}</p>
-          <p>Total Marks: {totalMarks}</p>
-        </div>
+          <div>
+            <div className="grid grid-cols-12 gap-3 text-xs font-semibold text-gray-500 mb-3 px-1">
+              <div className="col-span-7 md:col-span-8">Question Type</div>
+              <div className="col-span-2 text-center">No.</div>
+              <div className="col-span-2 text-center">Marks</div>
+              <div className="col-span-1"></div>
+            </div>
 
-        {/* Additional Instructions */}
-        <div>
-          <label className="block text-sm font-semibold text-gray-800 mb-2">Additional information (For better output)</label>
-          <textarea
-            {...register('additionalInstructions')}
-            rows={3}
-            // Added text-gray-900 and placeholder:text-gray-400
-            className="w-full px-4 py-3 bg-gray-50/50 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-gray-200 outline-none transition-all text-sm text-gray-900 placeholder:text-gray-400 font-medium resize-none"
-            placeholder="e.g. Generate a question paper for 3 hour exam duration..."
-          />
-        </div>
+            <div className="space-y-3">
+              {fields.map((field, index) => (
+                <div key={field.id} className="grid grid-cols-12 gap-2 md:gap-3 items-center">
+                  <select
+                    {...register(`questionRows.${index}.type` as const)}
+                    className="col-span-7 md:col-span-8 px-3 md:px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl outline-none text-sm text-gray-900 font-medium appearance-none"
+                  >
+                    <option value="Multiple Choice Questions">Multiple Choice Questions</option>
+                    <option value="Short Questions">Short Questions</option>
+                    <option value="Long Answer Questions">Long Answer Questions</option>
+                    <option value="Diagram/Graph-Based">Diagram/Graph-Based Questions</option>
+                    <option value="Numerical Problems">Numerical Problems</option>
+                  </select>
 
-        {/* Action Buttons */}
-        <div className="flex justify-between items-center pt-6 mt-4">
-          <button
-            type="button"
-            onClick={() => setView('empty')}
-            className="flex items-center gap-2 px-6 py-3 border border-gray-200 rounded-full text-sm font-semibold text-gray-900 hover:bg-gray-50 transition-colors"
-          >
-            <ChevronLeft size={18} />
-            Previous
-          </button>
-          
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="flex items-center gap-2 px-8 py-3 bg-[#1c1c1c] text-white rounded-full text-sm font-semibold hover:bg-black transition-colors disabled:bg-gray-400"
-          >
-            {isSubmitting ? 'Generating...' : 'Next'}
-            <ChevronRight size={18} />
-          </button>
-        </div>
+                  <input
+                    type="number"
+                    min="1"
+                    {...register(`questionRows.${index}.count` as const)}
+                    className="col-span-2 px-2 py-3 text-center bg-gray-50 border border-gray-200 rounded-2xl outline-none text-sm text-gray-900 font-semibold"
+                  />
 
-      </form>
+                  <input
+                    type="number"
+                    min="1"
+                    {...register(`questionRows.${index}.marks` as const)}
+                    className="col-span-2 px-2 py-3 text-center bg-gray-50 border border-gray-200 rounded-2xl outline-none text-sm text-gray-900 font-semibold"
+                  />
+
+                  <button
+                    type="button"
+                    onClick={() => remove(index)}
+                    className="col-span-1 p-1 text-gray-400 hover:text-red-500 transition-colors justify-self-center"
+                    aria-label="Remove row"
+                  >
+                    <X size={18} />
+                  </button>
+                </div>
+              ))}
+            </div>
+
+            <button
+              type="button"
+              onClick={() => append({ type: 'Short Questions', count: 1, marks: 2 })}
+              className="flex items-center gap-2 mt-4 text-sm font-semibold text-gray-800 hover:text-black transition-colors"
+            >
+              <div className="bg-black text-white p-1 rounded-full">
+                <Plus size={14} />
+              </div>
+              Add Question Type
+            </button>
+          </div>
+
+          <div className="flex flex-col items-end text-sm font-bold text-gray-900 space-y-1">
+            <p>Total Questions: {totalQuestions}</p>
+            <p>Total Marks: {totalMarks}</p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-semibold text-gray-800 mb-2">Additional information (for better output)</label>
+            <textarea
+              {...register('additionalInstructions')}
+              rows={3}
+              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-gray-300 outline-none text-sm text-gray-900 resize-none"
+              placeholder="e.g. Generate a question paper for 3 hour exam duration..."
+            />
+          </div>
+
+          <div className="flex items-center justify-between pt-4">
+            <button
+              type="button"
+              onClick={() => setView('empty')}
+              className="flex items-center gap-2 px-5 py-2.5 border border-gray-300 rounded-full text-sm font-semibold text-gray-900 hover:bg-gray-50 transition-colors"
+            >
+              <ChevronLeft size={16} />
+              Previous
+            </button>
+
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="flex items-center gap-2 px-7 py-2.5 bg-black text-white rounded-full text-sm font-semibold hover:bg-zinc-900 transition-colors disabled:bg-gray-400"
+            >
+              {isSubmitting ? 'Generating...' : 'Next'}
+              <ChevronRight size={16} />
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 }

@@ -4,7 +4,7 @@ import { assignmentQueue } from '../config/queue';
 
 export const createAssignment = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { ownerId, title, dueDate, questionTypes, totalQuestions, totalMarks, additionalInstructions } = req.body;
+    const { ownerId, title, className, dueDate, questionTypes, totalQuestions, totalMarks, additionalInstructions } = req.body;
     if (!ownerId || typeof ownerId !== 'string') {
       res.status(400).json({ error: 'ownerId is required' });
       return;
@@ -17,6 +17,7 @@ export const createAssignment = async (req: Request, res: Response): Promise<voi
     const newAssignment = new Assignment({
       ownerId: ownerId.trim(),
       title,
+      className,
       dueDate,
       questionTypes: JSON.parse(questionTypes || '[]'), // Assuming frontend sends stringified array in FormData
       totalQuestions: Number(totalQuestions),
@@ -33,6 +34,7 @@ export const createAssignment = async (req: Request, res: Response): Promise<voi
       assignmentId: savedAssignment._id,
       fileUrl: savedAssignment.fileUrl,
       title: savedAssignment.title,
+      className: savedAssignment.className,
       questionTypes: savedAssignment.questionTypes,
       totalQuestions: savedAssignment.totalQuestions,
       totalMarks: savedAssignment.totalMarks,

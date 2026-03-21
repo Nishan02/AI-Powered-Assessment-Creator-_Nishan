@@ -23,6 +23,7 @@ export const generateAssessment = async (
     
     Context/Source Material: ${contextText || 'General knowledge based on the topics.'}
     Title: ${assignmentDetails.title}
+    Class: ${assignmentDetails.className || 'Not specified'}
     Question Types: ${assignmentDetails.questionTypes.join(', ')}
     Total Questions: ${assignmentDetails.totalQuestions}
     Total Marks: ${assignmentDetails.totalMarks}

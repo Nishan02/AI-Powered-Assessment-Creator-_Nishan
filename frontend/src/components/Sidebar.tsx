@@ -36,13 +36,13 @@ export default function Sidebar() {
   };
 
   return (
-    <aside className="w-[252px] h-screen bg-[#f5f5f5] border-r border-gray-200 flex flex-col justify-between p-3 hidden md:flex shrink-0 print:hidden">
+    <aside className="w-[252px] h-screen bg-[#f4f5f7] border-r border-gray-200 flex flex-col justify-between p-3 hidden md:flex shrink-0 print:hidden">
       <div>
         <div className="flex items-center gap-2 px-2 py-2 mb-4">
           <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center text-white font-bold">
             V
           </div>
-          <span className="font-bold text-[31px] leading-none text-gray-900">VedaAI</span>
+          <span className="font-bold text-3xl leading-none text-gray-900">VedaAI</span>
         </div>
 
         <button
