@@ -92,10 +92,10 @@ export default function AssignmentForm() {
 
   return (
     <div className="max-w-5xl mx-auto pb-24">
-      <div className="mb-6">
+      <div className="mb-6 hidden md:block">
         <div className="flex items-center gap-2">
           <span className="w-2.5 h-2.5 rounded-full bg-green-500"></span>
-          <h2 className="text-2xl md:text-3xl font-bold text-gray-900">Create Assignment</h2>
+          <h2 className="text-3xl font-bold text-gray-900">Create Assignment</h2>
         </div>
         <p className="text-sm text-gray-500 mt-1">Set up a new assignment for your students.</p>
       </div>

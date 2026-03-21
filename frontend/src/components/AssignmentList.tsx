@@ -84,8 +84,8 @@ export default function AssignmentList() {
   }, []);
 
   return (
-    <div className="w-full max-w-[1100px] mx-auto md:mx-0 h-full flex flex-col relative pb-20 md:pb-4">
-      <div className="px-2 mb-2">
+    <div className="w-full h-full flex flex-col relative pb-20 md:pb-4">
+      <div className="px-2 mb-2 hidden md:block">
         <div className="flex items-center gap-2">
           <span className="w-2.5 h-2.5 rounded-full bg-green-500"></span>
           <h1 className="text-[32px] leading-none font-bold text-gray-900">Assignments</h1>
