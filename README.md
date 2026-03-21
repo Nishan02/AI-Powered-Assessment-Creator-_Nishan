@@ -118,15 +118,59 @@ Frontend will run on `http://localhost:3000`
 - **Assignment Management:** Create, store, delete, and search assignments with real-time updates
 - **AI Question Generation:** Converts user input into structured prompts, generates questions with difficulty levels and marks
 - **Output Paper:** Clean, organized question paper with sections, difficulty badges, and student info
+- **Regenerate Questions:** One-click regeneration to create alternative question sets without re-uploading files
+- **AI Usage Limits:** Respects Google Gemini API quotas with graceful error handling
 - **Real-time WebSocket:** Live status updates during question processing
 - **Mobile & Desktop:** Fully responsive design with adaptive navigation
 - **State Management:** Zustand for global state across app components
 
+## Regenerate & AI Limits Features
+
+### Regenerate Questions
+Teachers can regenerate a new set of questions from the same assignment **without re-uploading the file**:
+
+1. **Frontend:** Click the "Regenerate" button (RefreshCw icon) in the output paper view
+2. **What happens:**
+   - View switches to loading state with progress indicator
+   - Previous questions are replaced
+   - Same file and configuration parameters are reused
+   - New questions are generated with different variations
+   - WebSocket notifies when generation completes
+
+3. **Backend Process:**
+   - Endpoint: `POST /api/assignments/{id}/regenerate`
+   - Resets assignment status to `pending`
+   - Re-queues the job to BullMQ with original parameters
+   - Worker regenerates fresh questions from the same source file
+
+**Use Case:** Teachers can generate multiple question variants for the same content without uploading the file multiple times.
+
+### AI Usage Limits
+The platform uses **Google Gemini API** for question generation. AI limits are controlled by your API quota:
+
+**How Limits Work:**
+- Limits are enforced by Google Gemini API (free tier vs paid plans)
+- No custom per-user tracking in the app
+- Free tier has lower quotas than paid plans
+- Paid plans offer higher generation limits
+
+**Error Messages:**
+- If quota exceeded: `"AI generation limit reached. Please wait a few hours before trying again."`
+- If API key invalid: `"API authentication error. Please contact support."`
+
+**To increase limits:**
+- Upgrade your Google Gemini API plan
+- Add valid billing to your Google Cloud account
+- Monitor API usage in Google Cloud Console
+
+**Current Model:** `gemini-2.5-flash` (fast, efficient question generation)
+
 ## API Endpoints
 
-- `GET /api/assignments?ownerId={id}` - List assignments
-- `POST /api/assignments` - Create assignment
-- `DELETE /api/assignments/{id}` - Delete assignment
+- `GET /api/assignments?ownerId={id}` - List assignments for a user
+- `POST /api/assignments` - Create new assignment (multipart/form-data with file)
+- `DELETE /api/assignments/{id}?ownerId={id}` - Delete assignment
+- `POST /api/assignments/{id}/regenerate` - Regenerate questions for an assignment
 
 ## Database Schema
 
