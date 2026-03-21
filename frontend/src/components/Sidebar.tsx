@@ -1,16 +1,17 @@
 'use client';
 
-import { Home, Users, FileText, Wrench, Library, Settings, Plus } from 'lucide-react';
+import { Home, Users, FileText, Wrench, Library, Settings, Sparkles } from 'lucide-react';
 import { useAssignmentStore } from '@/store/useAssignmentStore';
+import BrandLogo from '@/components/BrandLogo';
 
 type SidebarSection = 'home' | 'groups' | 'assignments' | 'toolkit' | 'library' | 'settings';
 
 const NAV_ITEMS: Array<{ id: SidebarSection; label: string; icon: React.ReactNode }> = [
-  { id: 'home', label: 'Home', icon: <Home size={18} /> },
-  { id: 'groups', label: 'My Groups', icon: <Users size={18} /> },
-  { id: 'assignments', label: 'Assignments', icon: <FileText size={18} /> },
-  { id: 'toolkit', label: "AI Teacher's Toolkit", icon: <Wrench size={18} /> },
-  { id: 'library', label: 'My Library', icon: <Library size={18} /> },
+  { id: 'home', label: 'Home', icon: <Home size={19} /> },
+  { id: 'groups', label: 'My Groups', icon: <Users size={19} /> },
+  { id: 'assignments', label: 'Assignments', icon: <FileText size={19} /> },
+  { id: 'toolkit', label: "AI Teacher's Toolkit", icon: <Wrench size={19} /> },
+  { id: 'library', label: 'My Library', icon: <Library size={19} /> },
 ];
 
 export default function Sidebar() {
@@ -36,24 +37,24 @@ export default function Sidebar() {
   };
 
   return (
-    <aside className="w-[252px] h-screen bg-[#f4f5f7] border-r border-gray-200 flex flex-col justify-between p-3 hidden md:flex shrink-0 print:hidden">
+    <aside className="hidden md:flex w-[304px] h-[calc(100vh-24px)] bg-white rounded-2xl border border-[#e5e7eb] shadow-[0_32px_48px_rgba(0,0,0,0.2)] flex-col justify-between px-6 py-6 shrink-0 print:hidden">
       <div>
-        <div className="flex items-center gap-2 px-2 py-2 mb-4">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center text-white font-bold">
-            V
-          </div>
-          <span className="font-bold text-3xl leading-none text-gray-900">VedaAI</span>
+        <div className="flex items-center gap-3">
+          <BrandLogo size={42} />
+          <span className="font-bold text-[40px] leading-none tracking-[-0.02em] text-gray-900">VedaAI</span>
         </div>
 
-        <button
-          onClick={() => openAssignments('form')}
-          className="w-full bg-[#18181b] hover:bg-black text-white rounded-full py-3 px-4 flex items-center justify-center gap-2 font-medium transition-colors shadow-sm mb-7 border border-[#fb7f48]"
-        >
-          <Plus size={18} />
-          <span>Create Assignment</span>
-        </button>
+        <div className="mt-11 mb-11 rounded-full p-[2px] bg-[linear-gradient(90deg,#fb7f48,#f26b4b)] shadow-[0_6px_14px_rgba(251,127,72,0.45)]">
+          <button
+            onClick={() => openAssignments('form')}
+            className="w-full bg-[radial-gradient(circle_at_30%_0%,#3f4854_0%,#202328_55%,#1a1c20_100%)] hover:bg-black text-white rounded-full py-3 px-4 flex items-center justify-center gap-2 font-medium transition-colors"
+          >
+            <Sparkles size={14} />
+            <span className="text-[17px] leading-none">Create Assignment</span>
+          </button>
+        </div>
 
-        <nav className="space-y-1">
+        <nav className="space-y-2">
           {NAV_ITEMS.map((item) => (
             <NavItem
               key={item.id}
@@ -67,17 +68,17 @@ export default function Sidebar() {
         </nav>
       </div>
 
-      <div>
-        <nav className="mb-5">
+      <div className="pt-2">
+        <nav className="mb-6">
           <NavItem
-            icon={<Settings size={18} />}
+            icon={<Settings size={19} />}
             label="Settings"
             active={sidebarSection === 'settings'}
             onClick={() => handleSectionClick('settings')}
           />
         </nav>
 
-        <div className="bg-[#eef0f3] rounded-xl p-3 flex items-center gap-3 border border-[#e4e7ec]">
+        <div className="bg-[#f3f4f6] rounded-2xl p-3.5 flex items-center gap-3 border border-[#eceef1]">
           <div className="w-10 h-10 rounded-full bg-orange-100 overflow-hidden flex shrink-0">
             <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=school-profile" alt="School avatar" />
           </div>
@@ -108,8 +109,8 @@ function NavItem({
     <button
       type="button"
       onClick={onClick}
-      className={`w-full text-left flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-        active ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600 hover:bg-white hover:text-gray-900'
+      className={`w-full text-left flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${
+        active ? 'bg-[#f3f4f6] text-gray-900' : 'text-gray-500 hover:bg-[#f7f7f8] hover:text-gray-900'
       }`}
     >
       {icon}

@@ -70,46 +70,46 @@ export default function AssignmentList() {
   };
 
   return (
-    <div className="max-w-6xl mx-auto h-full flex flex-col relative pb-20 md:pb-24">
-      <div className="bg-white/80 backdrop-blur rounded-2xl border border-gray-200 p-4 md:p-5 mb-3">
+    <div className="w-full max-w-[1100px] mx-auto md:mx-0 h-full flex flex-col relative pb-20 md:pb-4">
+      <div className="px-2 mb-2">
         <div className="flex items-center gap-2">
           <span className="w-2.5 h-2.5 rounded-full bg-green-500"></span>
-          <h1 className="text-xl md:text-2xl font-bold text-gray-900">Assignments</h1>
+          <h1 className="text-[32px] leading-none font-bold text-gray-900">Assignments</h1>
         </div>
-        <p className="text-xs md:text-sm text-gray-500 mt-1">Manage and create assignments for your classes.</p>
+        <p className="text-sm text-gray-500 mt-1">Manage and create assignments for your classes.</p>
       </div>
 
-      <div className="bg-white/75 rounded-2xl border border-gray-200 p-3 mb-3">
-        <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+      <div className="h-14 bg-white/75 rounded-2xl border border-[#e5e7eb] px-4 mb-3 flex items-center justify-between gap-3">
+        <div className="flex items-center gap-2">
           <button
             onClick={() => setSortOrder(sortOrder === 'newest' ? 'oldest' : 'newest')}
-            className="sm:w-40 flex items-center gap-2 text-sm font-medium text-gray-800 hover:bg-gray-100 bg-white px-3 py-2 rounded-xl border border-gray-200 transition-colors"
+            className="flex items-center gap-2 text-[16px] font-medium text-gray-400 hover:text-gray-700 transition-colors"
           >
-            <Filter size={14} />
-            {sortOrder === 'newest' ? 'Newest First' : 'Oldest First'}
+            <Filter size={16} />
+            <span>Filter By</span>
           </button>
+        </div>
 
-          <div className="relative sm:ml-auto sm:w-72">
+          <div className="relative w-[360px] max-w-[58%]">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
             <input
               type="text"
               placeholder="Search Assignment"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 bg-white border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-gray-300 text-gray-900"
+              className="w-full pl-9 pr-4 py-2.5 bg-white border border-gray-200 rounded-full text-sm outline-none focus:ring-2 focus:ring-gray-300 text-gray-900"
             />
           </div>
-        </div>
       </div>
 
       {filteredAndSortedAssignments.length === 0 ? (
         <div className="text-center text-gray-500 mt-10">No assignments found matching "{searchQuery}"</div>
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 overflow-y-auto pr-0 md:pr-1 pb-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 overflow-y-auto pr-0 pb-8">
           {filteredAndSortedAssignments.map((assignment) => (
-            <div key={assignment._id} className="relative bg-white border border-gray-200 p-4 md:p-5 rounded-2xl shadow-sm">
+            <div key={assignment._id} className="relative bg-white border border-gray-200 px-5 py-4 rounded-2xl min-h-[138px] shadow-sm">
               <div className="flex items-start justify-between gap-2">
-                <h3 className="font-bold text-xl text-gray-900">{assignment.title}</h3>
+                <h3 className="font-bold text-[22px] leading-[1.15] text-gray-900">{assignment.title}</h3>
                 <button
                   type="button"
                   onClick={() => setOpenMenuId(openMenuId === assignment._id ? null : assignment._id)}
@@ -119,7 +119,7 @@ export default function AssignmentList() {
                 </button>
               </div>
 
-              <div className="flex justify-between gap-3 text-xs text-gray-600 font-semibold mt-9">
+              <div className="flex justify-between gap-3 text-xs text-gray-600 font-semibold mt-8">
                 <span>Assigned on: {formatDate(assignment.createdAt)}</span>
                 <span>Due: {formatDate(assignment.dueDate)}</span>
               </div>
@@ -146,12 +146,12 @@ export default function AssignmentList() {
         </div>
       )}
 
-      <div className="hidden md:block absolute bottom-8 left-1/2 -translate-x-1/2 z-20">
+      <div className="hidden md:block absolute bottom-3 left-1/2 -translate-x-1/2 z-20">
         <button
           onClick={() => setView('form')}
-          className="bg-black hover:bg-zinc-900 text-white px-6 py-3 rounded-full flex items-center gap-2 shadow-lg text-sm font-semibold"
+          className="bg-black hover:bg-zinc-900 text-white px-6 py-2.5 rounded-full flex items-center gap-2 shadow-lg text-sm font-semibold"
         >
-          <Plus size={16} />
+          <Plus size={15} />
           Create Assignment
         </button>
       </div>

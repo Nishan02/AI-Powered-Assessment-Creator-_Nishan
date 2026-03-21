@@ -13,6 +13,7 @@ import {
   FileText,
   Plus,
   Menu,
+  Grid2x2,
 } from 'lucide-react';
 import Sidebar from '@/components/Sidebar';
 import EmptyState from '@/components/EmptyState';
@@ -21,6 +22,7 @@ import AssignmentListener from '@/components/AssignmentListener';
 import OutputPaper from '@/components/OutputPaper';
 import AssignmentList from '@/components/AssignmentList';
 import Auth from '@/components/Auth';
+import BrandLogo from '@/components/BrandLogo';
 import { useAssignmentStore } from '@/store/useAssignmentStore';
 
 type SidebarSection = 'home' | 'groups' | 'assignments' | 'toolkit' | 'library' | 'settings';
@@ -148,10 +150,10 @@ export default function DashboardPage() {
   const sectionTitle = sectionTitleMap[sidebarSection];
 
   return (
-    <div className="flex h-screen bg-[#e9ebef] overflow-hidden">
+    <div className="flex h-screen bg-[#e9ebef] overflow-hidden md:p-3 md:gap-3">
       <Sidebar />
 
-      <div className="flex-1 min-w-0 flex flex-col h-screen overflow-hidden">
+      <div className="flex-1 min-w-0 flex flex-col h-full overflow-hidden">
         <DesktopHeader
           sectionTitle={sectionTitle}
           userName={userName}
@@ -166,7 +168,7 @@ export default function DashboardPage() {
           onLogout={handleLogout}
         />
 
-        <main className="flex-1 overflow-y-auto relative px-3 py-3 md:px-6 md:py-5 pb-24 md:pb-6">
+        <main className="flex-1 overflow-y-auto relative px-3 py-3 md:px-0 md:py-3 pb-24 md:pb-0">
           {isAssignmentsSection && <AssignmentListener />}
 
           {isLoading && (
@@ -233,12 +235,13 @@ function DesktopHeader({
   onLogout: () => void;
 }) {
   return (
-    <header className="hidden md:flex h-14 bg-white/80 backdrop-blur-sm border-b border-gray-200 items-center justify-between px-5 shrink-0 z-20 rounded-bl-2xl">
-      <div className="flex items-center gap-2">
-        <button onClick={onBack} className="p-1 hover:bg-gray-100 rounded-md text-gray-600 transition-colors">
+    <header className="hidden md:flex h-[56px] bg-white/75 border border-[#e5e7eb] items-center justify-between px-6 pr-3 shrink-0 rounded-2xl">
+      <div className="flex items-center gap-2.5 text-gray-500">
+        <button onClick={onBack} className="p-1.5 hover:bg-gray-100 rounded-full text-gray-700 transition-colors">
           <ArrowLeft size={18} />
         </button>
-        <span className="font-semibold text-gray-800 text-sm">{sectionTitle}</span>
+        <Grid2x2 size={14} className="text-gray-400" />
+        <span className="font-medium text-[14px] text-gray-400">{sectionTitle}</span>
       </div>
 
       <div className="flex items-center gap-3">
@@ -275,14 +278,20 @@ function MobileHeader({
 }) {
   return (
     <div className="md:hidden bg-[#f4f5f7] border-b border-gray-200 px-3 pt-2 pb-3">
-      <div className="bg-white rounded-2xl px-3 py-2 flex items-center justify-between mb-2">
-        <div className="font-bold text-gray-900">VedaAI</div>
+      <div className="bg-white rounded-2xl px-3 py-2 flex items-center justify-between mb-2 shadow-sm">
+        <div className="flex items-center gap-2">
+          <BrandLogo size={24} />
+          <div className="font-bold text-[30px] leading-none text-gray-900">VedaAI</div>
+        </div>
         <div className="flex items-center gap-3">
-          <Bell size={16} className="text-gray-500" />
+          <div className="relative">
+            <Bell size={16} className="text-gray-500" />
+            <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-orange-500 rounded-full border border-white"></span>
+          </div>
           <div className="w-7 h-7 rounded-full bg-blue-100 overflow-hidden">
             <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${userName}`} alt="User" />
           </div>
-          <button onClick={onLogout} className="text-gray-500">
+          <button onClick={onLogout} className="text-gray-500" aria-label="Menu">
             <Menu size={16} />
           </button>
         </div>
