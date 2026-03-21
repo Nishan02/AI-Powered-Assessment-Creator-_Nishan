@@ -4,14 +4,14 @@ An intelligent assessment generation platform that enables educators to create, 
 
 ## Overview
 
-VedaAI streamlines the assessment creation workflow by combining modern web technologies with AI-powered content generation. Teachers can upload reference materials, specify question parameters, and receive auto-generated, structured question papers ready for classroom use.
+VedaAI enables teachers to create AI-powered question papers quickly. Upload reference materials, configure question parameters, and the system generates organized, structured question papers automatically.
 
-**Key Capabilities:**
-- Quick assignment creation with file uploads (PDF/Text)
-- AI-powered question generation with structured sections
-- Real-time progress tracking via WebSocket
-- Organized question papers with difficulty levels and marks allocation
-- Responsive design for desktop and mobile devices
+**Core Capabilities:**
+- Assignment creation with file uploads
+- AI-powered question generation  
+- Real-time progress tracking
+- Organized output with difficulty levels and marks
+- Mobile and desktop responsive design
 
 ## Tech Stack
 
@@ -38,261 +38,129 @@ VedaAI streamlines the assessment creation workflow by combining modern web tech
 ## Project Structure
 
 ```
-VedaAI_Nishan_Raj_Regmi/
-├── frontend/                 # Next.js application
-│   ├── src/
-│   │   ├── app/            # Pages and layouts
-│   │   ├── components/     # Reusable UI components
-│   │   │   ├── AssignmentForm.tsx
-│   │   │   ├── AssignmentList.tsx
-│   │   │   ├── OutputPaper.tsx
-│   │   │   └── ...other components
-│   │   └── store/          # Zustand state management
-│   ├── public/             # Static assets
-│   └── package.json
-│
-├── backend/                # Express.js API
-│   ├── src/
-│   │   ├── index.ts        # Server entry point
-│   │   ├── config/         # Configuration (Redis, queues)
-│   │   ├── controllers/    # API route handlers
-│   │   ├── models/         # MongoDB schemas
-│   │   ├── routes/         # API endpoints
-│   │   ├── services/       # Business logic (AI, PDF)
-│   │   └── workers/        # BullMQ job processors
-│   ├── uploads/            # User-uploaded files
-│   └── package.json
-│
-└── uploads/                # Root uploads directory
+VedaAI/
+├── frontend/              # Next.js + TypeScript
+│   ├── src/app/          # Pages and layouts
+│   ├── src/components/   # React components
+│   └── src/store/        # Zustand state management
+├── backend/              # Express.js + Node.js
+│   ├── src/controllers/  # API handlers
+│   ├── src/models/       # MongoDB schemas
+│   ├── src/services/     # Business logic (AI, PDF)
+│   └── src/workers/      # BullMQ job processors
+└── uploads/              # User uploaded files
 ```
 
 ## Getting Started
 
 ### Prerequisites
-- Node.js 18+
-- MongoDB (local or Atlas)
-- Redis server
-- npm or yarn
+- Node.js 18+, MongoDB, Redis, npm/yarn
 
 ### Installation
 
-1. **Clone and install dependencies**
+1. **Install dependencies:**
 ```bash
 cd frontend && npm install
 cd ../backend && npm install
 ```
 
-2. **Configure Backend**
-
-Create `.env` file in `backend/`:
+2. **Configure backend (.env):**
 ```
 MONGODB_URI=mongodb://localhost:27017/vedaai
 REDIS_URL=redis://localhost:6379
-OPENAI_API_KEY=your_api_key_here
+OPENAI_API_KEY=your_key_here
 PORT=5000
-NODE_ENV=development
-```
-
-3. **Configure Frontend**
-
-Ensure `AssignmentForm.tsx` and services use the correct API endpoint:
-```
-http://localhost:5000/api
 ```
 
 ### Running Locally
 
-**Start MongoDB & Redis:**
 ```bash
-# MongoDB
-mongod
+# Terminal 1: Backend
+cd backend && npm run dev
 
-# Redis (in another terminal)
-redis-server
+# Terminal 2: Frontend  
+cd frontend && npm run dev
 ```
 
-**Start Backend:**
-```bash
-cd backend
-npm run dev
-```
+Access at `http://localhost:3000`
 
-**Start Frontend:**
-```bash
-cd frontend
-npm run dev
-```
+## How It Works
 
-Access the application at `http://localhost:3000`
-
-## Architecture & Flow
-
-### Assignment Creation Flow
-1. Teacher fills the assignment form (file, due date, question config)
-2. Frontend validates input and sends POST request to backend
-3. Backend stores assignment metadata in MongoDB
-4. BullMQ job is enqueued with assignment details
-5. Worker service processes the job:
-   - Extracts content from uploaded file
-   - Structures a detailed prompt for AI model
-   - Generates question paper
-   - Stores generated questions in MongoDB
+**Assignment Creation Flow:**
+1. Teacher submits form with file, due date, and question parameters
+2. Backend validates and stores assignment in MongoDB
+3. BullMQ job added to queue for AI processing
+4. Worker extracts file content, structures prompt, and calls LLM
+5. Generated questions stored in database
 6. WebSocket notifies frontend of completion
-7. Teacher views and can regenerate if needed
+7. Teacher views and approves the question paper
 
-### Real-time Updates
-- WebSocket connection established on page load
-- Assignment status updates pushed to frontend
-- Eliminates polling overhead
-- Smooth user experience during processing
-
-### State Management
-- **Global State (Zustand):** Assignments list, view mode, authentication
-- **Local State (React):** Form inputs, filter/sort in lists
-- **Server State:** Persisted in MongoDB
+**Key Technologies:**
+- MongoDB for persistent storage
+- Redis for caching and job state management
+- BullMQ for background job processing
+- WebSocket for real-time status updates
+- LLM API for question generation
 
 ## Key Features Implemented
 
-### 1. Assignment Management
-- Create assignments with custom parameters
-- Store and retrieve from MongoDB
-- Delete with confirmation
-- Real-time list updates
-
-### 2. AI Generation
-- Convert user input to structured prompts
-- Generate sections (A, B, etc.)
-- Assign difficulty levels (Easy/Moderate/Hard)
-- Calculate per-question marks
-- Queue-based processing to prevent blocking
-
-### 3. Output Paper
-- Clean, exam-paper-like formatting
-- Section-based organization
-- Question display with metadata
-- Responsive layout for printing
-
-### 4. Mobile & Desktop Responsive
-- Sidebar navigation on desktop
-- Bottom navigation on mobile
-- Optimized touch interactions
-- Appropriate hiding of non-essential UI elements
+- **Assignment Management:** Create, store, delete, and search assignments with real-time updates
+- **AI Question Generation:** Converts user input into structured prompts, generates questions with difficulty levels and marks
+- **Output Paper:** Clean, organized question paper with sections, difficulty badges, and student info
+- **Real-time WebSocket:** Live status updates during question processing
+- **Mobile & Desktop:** Fully responsive design with adaptive navigation
+- **State Management:** Zustand for global state across app components
 
 ## API Endpoints
 
-### Assignment Management
-- `GET /api/assignments?ownerId={id}` - List user assignments
-- `POST /api/assignments` - Create new assignment
-- `GET /api/assignments/{id}` - Get assignment details
-- `DELETE /api/assignments/{id}` - Remove assignment
-
-### File Upload
-- `POST /api/assignments` - Supports multipart file upload
+- `GET /api/assignments?ownerId={id}` - List assignments
+- `POST /api/assignments` - Create assignment
+- `DELETE /api/assignments/{id}` - Delete assignment
 
 ## Database Schema
 
-### Assignment Document
+**Assignment Collection:**
 ```javascript
 {
-  _id: ObjectId,
-  title: String,
-  className: String,
-  createdAt: Date,
-  dueDate: Date,
-  ownerId: String,
-  status: String, // "pending", "processing", "completed", "failed"
-  sections: Array,
-  questionTypes: Array,
-  totalQuestions: Number,
-  totalMarks: Number,
-  additionalInstructions: String,
-  filePath: String
+  title, className, dueDate, ownerId,
+  status: "pending|processing|completed|failed",
+  sections: Array<{title, questions}>,
+  totalQuestions, totalMarks, createdAt
 }
 ```
 
-## Deployment Notes
+## Deployment
 
-### Backend Deployment
-- Ensure Redis and MongoDB are accessible from server
-- Set environment variables (API keys, DB URIs)
-- Use production-grade process manager (PM2)
-- Configure CORS for frontend domain
+- Set environment variables for API keys and database URIs
+- Ensure MongoDB, Redis accessible from server
+- Frontend: `npm run build` and deploy to Vercel or Node server
+- Backend: Deploy with PM2 or Docker
+- Update API endpoints in frontend config
 
-### Frontend Deployment
-- Build with `npm run build`
-- Deploy to Vercel, Netlify, or custom Node server
-- Update API endpoint in configuration
-- Ensure WebSocket endpoint matches backend
+## Development
 
-## Development Workflow
+- Use TypeScript strict mode
+- Format code with Prettier
+- Test on desktop and mobile before committing
+- Keep changes focused and well-documented
 
-1. **Feature Development**
-   - Create feature branch
-   - Make changes in frontend/backend
-   - Test locally with dev servers
-   - Commit with clear messages
+## Future Enhancements
 
-2. **Testing**
-   - Manual testing on different screen sizes
-   - Test assignment creation flow end-to-end
-   - Verify PDF generation (if implemented)
-   - Check real-time updates
-
-3. **Code Quality**
-   - Follow TypeScript strict mode
-   - Use consistent formatting (Prettier)
-   - Remove console logs before commit
-
-## Known Limitations & Future Improvements
-
-### Current Scope
-- Single AI model integration (can be extended)
-- File uploads stored locally (consider S3 for production)
-- No user authentication system (basic session management)
-
-### Potential Enhancements
 - PDF export with proper formatting
-- Advanced caching strategies
 - User authentication and authorization
 - Multiple LLM provider support
 - Question bank management
-- Analytics dashboard
-- Batch processing
+- Advanced analytics dashboard
 
 ## Troubleshooting
 
-**WebSocket Connection Issues**
-- Verify backend is running on port 5000
-- Check browser console for connection errors
-- Ensure frontend API endpoint is correct
-
-**Database Connection Failed**
-- Confirm MongoDB is running
-- Check MONGODB_URI in .env
-- Verify network access if using MongoDB Atlas
-
-**File Upload Issues**
-- Check file size limits
-- Verify uploads directory exists with write permissions
-- Confirm multer configuration in backend
-
-**Redis Connection Problems**
-- Ensure Redis server is running
-- Check REDIS_URL connection string
-- Verify port 6379 is accessible
-
-## Contributing
-
-When contributing:
-1. Keep changes focused and well-documented
-2. Test thoroughly before submitting
-3. Follow the existing code style
-4. Update this README if adding major features
-
-## License
-
-This project is part of a hiring assignment and is not for public distribution.
+| Issue | Solution |
+|-------|----------|
+| WebSocket connection failed | Verify backend running on port 5000, check frontend API endpoint |
+| MongoDB connection error | Ensure MongoDB is running, check MONGODB_URI in .env |
+| File upload fails | Check file size limits, verify uploads directory exists |
+| Redis connection error | Ensure Redis is running on port 6379, check REDIS_URL |
 
 ---
 
-**Questions or Issues?** Review the codebase structure and check backend logs for detailed error information.
+Questions? Check the codebase and backend logs for debugging.
