@@ -1,28 +1,58 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { Bell, ArrowLeft } from 'lucide-react';
 import Sidebar from '@/components/Sidebar';
 import EmptyState from '@/components/EmptyState';
-import { useAssignmentStore } from '@/store/useAssignmentStore';
 import AssignmentForm from '@/components/AssignmentForm';
 import AssignmentListener from '@/components/AssignmentListener';
 import OutputPaper from '@/components/OutputPaper';
-
+import AssignmentList from '@/components/AssignmentList'; // <-- Imported List
+import { useAssignmentStore } from '@/store/useAssignmentStore';
 
 export default function DashboardPage() {
-  const { view, setView } = useAssignmentStore();
+  const { view, setView, setAssignments, assignments } = useAssignmentStore();
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Fetch assignments on initial load
+  useEffect(() => {
+    const fetchAssignments = async () => {
+      try {
+        const res = await fetch('http://localhost:5000/api/assignments');
+        const data = await res.json();
+        setAssignments(data);
+        
+        // Decide what to show based on data
+        if (data.length > 0) {
+          setView('list');
+        } else {
+          setView('empty');
+        }
+      } catch (error) {
+        console.error("Failed to fetch assignments", error);
+        setView('empty');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchAssignments();
+  }, [setAssignments, setView]);
 
   return (
-  <div className="flex h-screen bg-[#f8f9fa] overflow-hidden print:h-auto print:overflow-visible print:bg-white">
+    <div className="flex h-screen bg-[#f8f9fa] overflow-hidden print:h-auto print:overflow-visible print:bg-white">
 
-   <Sidebar />
+      <Sidebar />
 
-   <div className="flex-1 flex flex-col h-screen overflow-hidden print:h-auto print:overflow-visible">
+      <div className="flex-1 flex flex-col h-screen overflow-hidden print:h-auto print:overflow-visible">
         
         {/* Top Header */}
-        <header className="h-16 bg-white/50 backdrop-blur-sm border-b border-gray-200 flex items-center justify-between px-6 shrink-0 print:hidden" >
+        <header className="h-16 bg-white/50 backdrop-blur-sm border-b border-gray-200 flex items-center justify-between px-6 shrink-0 print:hidden z-30">
           <div className="flex items-center gap-2">
-            <button className="p-1 hover:bg-gray-100 rounded-md text-gray-600 transition-colors">
+            <button 
+              onClick={() => assignments.length > 0 ? setView('list') : setView('empty')}
+              className="p-1 hover:bg-gray-100 rounded-md text-gray-600 transition-colors"
+            >
               <ArrowLeft size={20} />
             </button>
             <span className="font-semibold text-gray-800 text-sm">Assignment</span>
@@ -44,36 +74,38 @@ export default function DashboardPage() {
         </header>
 
         {/* Dynamic Content Body */}
-        {/* Dynamic Content Body */}
         <main className="flex-1 overflow-y-auto relative p-8 print:p-0 print:overflow-visible">
           <AssignmentListener />
           
-          {view === 'empty' && <EmptyState />}
+          {isLoading && (
+            <div className="flex items-center justify-center h-full">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500"></div>
+            </div>
+          )}
+          
+          {!isLoading && view === 'empty' && <EmptyState />}
+          
+          {!isLoading && view === 'list' && <AssignmentList />}
           
           {view === 'form' && (
             <div className="pb-20">
               <AssignmentForm />
-              <div className="text-center mt-6">
-                <button onClick={() => setView('empty')} className="text-sm text-gray-500 hover:text-gray-800 underline">
-                  Cancel
-                </button>
-              </div>
             </div>
           )}
 
           {view === 'completed' && (
-  <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-    <OutputPaper />
-    <div className="text-center mt-6">
-      <button 
-        onClick={() => setView('empty')} 
-        className="text-sm text-gray-500 hover:text-gray-800 underline print-hidden"
-      >
-        Create Another Assignment
-      </button>
-    </div>
-  </div>
-)}
+            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <OutputPaper />
+              <div className="text-center mt-6">
+                <button 
+                  onClick={() => setView('list')} 
+                  className="text-sm font-semibold text-gray-500 hover:text-gray-900 underline print-hidden"
+                >
+                  Back to Dashboard
+                </button>
+              </div>
+            </div>
+          )}
         </main>
 
       </div>

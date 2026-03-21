@@ -14,6 +14,8 @@ interface AssignmentState {
 
   assignments: any[];
   setAssignments: (assignments: any[]) => void;
+
+  removeAssignment: (id: string) => void;
   
   reset: () => void;
 }
@@ -29,5 +31,10 @@ export const useAssignmentStore = create<AssignmentState>((set) => ({
   setGeneratedPaper: (paper) => set({ generatedPaper: paper }),
   assignments: [],
   setAssignments: (assignments) => set({ assignments }),
+
+  removeAssignment: (id) => set((state) => ({ 
+  assignments: state.assignments.filter(a => a._id !== id) 
+})),
+
   reset: () => set({ view: 'list', assignmentId: null, generatedPaper: null }),
 }));
