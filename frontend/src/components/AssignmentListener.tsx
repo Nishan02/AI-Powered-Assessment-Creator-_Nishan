@@ -7,7 +7,7 @@ import { useAssignmentStore } from '@/store/useAssignmentStore';
 const socket = io('http://localhost:5000');
 
 export default function AssignmentListener() {
-  const { assignmentId, view, setView, setGeneratedPaper } = useAssignmentStore();
+  const { assignmentId, view, setView, setGeneratedPaper, upsertAssignment } = useAssignmentStore();
 
   useEffect(() => {
     if (!assignmentId) return;
@@ -15,6 +15,7 @@ export default function AssignmentListener() {
     socket.emit('join-assignment-room', assignmentId);
 
     socket.on('generation-complete', (data) => {
+      upsertAssignment(data);
       setGeneratedPaper(data);
       setView('completed'); // Switch to the final output view!
     });
@@ -27,7 +28,7 @@ export default function AssignmentListener() {
       socket.off('generation-complete');
       socket.off('generation-failed');
     };
-  }, [assignmentId, setView, setGeneratedPaper]);
+  }, [assignmentId, setView, setGeneratedPaper, upsertAssignment]);
 
   if (view === 'loading') {
     return (

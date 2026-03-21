@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import {
   Bell,
   ArrowLeft,
@@ -27,6 +27,7 @@ type SidebarSection = 'home' | 'groups' | 'assignments' | 'toolkit' | 'library' 
 
 export default function DashboardPage() {
   const {
+    hasHydrated,
     view,
     setView,
     setAssignments,
@@ -44,9 +45,32 @@ export default function DashboardPage() {
 
   const [isLoading, setIsLoading] = useState(true);
 
+  const fetchAssignments = useCallback(
+    async ({ showLoader = true, syncView = false }: { showLoader?: boolean; syncView?: boolean } = {}) => {
+      if (!ownerId) return;
+      if (showLoader) setIsLoading(true);
+
+      try {
+        const res = await fetch(`http://localhost:5000/api/assignments?ownerId=${encodeURIComponent(ownerId)}`);
+        if (!res.ok) throw new Error('Failed to fetch assignments');
+        const data = await res.json();
+        setAssignments(data);
+
+        if (syncView) {
+          setView(data.length > 0 ? 'list' : 'empty');
+        }
+      } catch (error) {
+        console.error('Failed to fetch assignments', error);
+        if (syncView) setView('empty');
+      } finally {
+        if (showLoader) setIsLoading(false);
+      }
+    },
+    [ownerId, setAssignments, setView]
+  );
+
   useEffect(() => {
     if (!isAuthenticated) return;
-    setIsLoading(true);
 
     if (!ownerId) {
       setAssignments([]);
@@ -55,23 +79,16 @@ export default function DashboardPage() {
       return;
     }
 
-    const fetchAssignments = async () => {
-      try {
-        const res = await fetch(`http://localhost:5000/api/assignments?ownerId=${encodeURIComponent(ownerId)}`);
-        if (!res.ok) throw new Error('Failed to fetch assignments');
-        const data = await res.json();
-        setAssignments(data);
-        setView(data.length > 0 ? 'list' : 'empty');
-      } catch (error) {
-        console.error('Failed to fetch assignments', error);
-        setView('empty');
-      } finally {
-        setIsLoading(false);
-      }
-    };
+    fetchAssignments({ showLoader: true, syncView: true });
+  }, [setAssignments, setView, isAuthenticated, ownerId, fetchAssignments]);
 
-    fetchAssignments();
-  }, [setAssignments, setView, isAuthenticated, ownerId]);
+  useEffect(() => {
+    if (!isAuthenticated || !ownerId) return;
+    if (sidebarSection !== 'assignments') return;
+    if (view !== 'list' && view !== 'empty') return;
+
+    fetchAssignments({ showLoader: false, syncView: false });
+  }, [isAuthenticated, ownerId, sidebarSection, view, fetchAssignments]);
 
   const handleLogout = async () => {
     if (isGuest && guestAssignmentIds.length > 0) {
@@ -90,6 +107,14 @@ export default function DashboardPage() {
     }
     logout();
   };
+
+  if (!hasHydrated) {
+    return (
+      <div className="h-screen w-full flex items-center justify-center bg-[#e9ebef]">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500"></div>
+      </div>
+    );
+  }
 
   if (!isAuthenticated) return <Auth />;
 

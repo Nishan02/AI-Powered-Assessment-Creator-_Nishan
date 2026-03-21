@@ -21,7 +21,7 @@ interface IFormInput {
 }
 
 export default function AssignmentForm() {
-  const { setAssignmentId, setView, isGuest, ownerId, addGuestAssignmentId } = useAssignmentStore();
+  const { setAssignmentId, setView, setAssignments, isGuest, ownerId, addGuestAssignmentId } = useAssignmentStore();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { register, control, handleSubmit, watch } = useForm<IFormInput>({
@@ -71,6 +71,16 @@ export default function AssignmentForm() {
       const result = await response.json();
       setAssignmentId(result.assignmentId);
       if (isGuest) addGuestAssignmentId(result.assignmentId);
+
+      // Refresh local list immediately so newly created assignment appears without page refresh.
+      const latestAssignments = await fetch(
+        `http://localhost:5000/api/assignments?ownerId=${encodeURIComponent(ownerId)}`
+      );
+      if (latestAssignments.ok) {
+        const latest = await latestAssignments.json();
+        setAssignments(latest);
+      }
+
       setView('loading');
     } catch (error) {
       console.error(error);
