@@ -1,7 +1,7 @@
 'use client';
 
-import { useMemo, useState } from 'react';
-import { Search, Filter, MoreVertical, Plus } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Search, Filter, MoreVertical, Plus, ChevronDown } from 'lucide-react';
 import { useAssignmentStore } from '@/store/useAssignmentStore';
 
 interface Assignment {
@@ -18,6 +18,8 @@ export default function AssignmentList() {
   const [searchQuery, setSearchQuery] = useState('');
   const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const [isSortMenuOpen, setIsSortMenuOpen] = useState(false);
+  const sortMenuRef = useRef<HTMLDivElement | null>(null);
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -69,6 +71,18 @@ export default function AssignmentList() {
     }
   };
 
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (!sortMenuRef.current) return;
+      if (!sortMenuRef.current.contains(event.target as Node)) {
+        setIsSortMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   return (
     <div className="w-full max-w-[1100px] mx-auto md:mx-0 h-full flex flex-col relative pb-20 md:pb-4">
       <div className="px-2 mb-2">
@@ -80,26 +94,57 @@ export default function AssignmentList() {
       </div>
 
       <div className="h-14 bg-white/75 rounded-2xl border border-[#e5e7eb] px-4 mb-3 flex items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
+        <div className="relative flex items-center" ref={sortMenuRef}>
           <button
-            onClick={() => setSortOrder(sortOrder === 'newest' ? 'oldest' : 'newest')}
+            type="button"
+            onClick={() => setIsSortMenuOpen((prev) => !prev)}
             className="flex items-center gap-2 text-[16px] font-medium text-gray-400 hover:text-gray-700 transition-colors"
           >
             <Filter size={16} />
             <span>Filter By</span>
+            <ChevronDown size={14} />
           </button>
+
+          {isSortMenuOpen && (
+            <div className="absolute top-9 left-0 z-30 w-44 bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden">
+              <button
+                type="button"
+                onClick={() => {
+                  setSortOrder('newest');
+                  setIsSortMenuOpen(false);
+                }}
+                className={`w-full text-left px-3 py-2.5 text-sm ${
+                  sortOrder === 'newest' ? 'bg-gray-50 text-gray-900 font-semibold' : 'text-gray-700 hover:bg-gray-50'
+                }`}
+              >
+                Newest First
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setSortOrder('oldest');
+                  setIsSortMenuOpen(false);
+                }}
+                className={`w-full text-left px-3 py-2.5 text-sm ${
+                  sortOrder === 'oldest' ? 'bg-gray-50 text-gray-900 font-semibold' : 'text-gray-700 hover:bg-gray-50'
+                }`}
+              >
+                Oldest First
+              </button>
+            </div>
+          )}
         </div>
 
-          <div className="relative w-[360px] max-w-[58%]">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
-            <input
-              type="text"
-              placeholder="Search Assignment"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-4 py-2.5 bg-white border border-gray-200 rounded-full text-sm outline-none focus:ring-2 focus:ring-gray-300 text-gray-900"
-            />
-          </div>
+        <div className="relative w-[360px] max-w-[58%]">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
+          <input
+            type="text"
+            placeholder="Search Assignment"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pl-9 pr-4 py-2.5 bg-white border border-gray-200 rounded-full text-sm outline-none focus:ring-2 focus:ring-gray-300 text-gray-900"
+          />
+        </div>
       </div>
 
       {filteredAndSortedAssignments.length === 0 ? (
