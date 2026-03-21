@@ -2,7 +2,7 @@ import { create } from 'zustand';
 
 interface AssignmentState {
   // Navigation State
-  view: 'empty' | 'form' | 'loading' | 'completed' | 'failed';
+  view: 'empty' | 'list' | 'form' | 'loading' | 'completed' | 'failed';
   setView: (view: AssignmentState['view']) => void;
 
   // Data State
@@ -11,12 +11,15 @@ interface AssignmentState {
   
   generatedPaper: any | null;
   setGeneratedPaper: (paper: any) => void;
+
+  assignments: any[];
+  setAssignments: (assignments: any[]) => void;
   
   reset: () => void;
 }
 
 export const useAssignmentStore = create<AssignmentState>((set) => ({
-  view: 'empty', // Start on the 0 State screen
+  view: 'list', 
   setView: (view) => set({ view }),
   
   assignmentId: null,
@@ -24,6 +27,7 @@ export const useAssignmentStore = create<AssignmentState>((set) => ({
   
   generatedPaper: null,
   setGeneratedPaper: (paper) => set({ generatedPaper: paper }),
-  
-  reset: () => set({ view: 'empty', assignmentId: null, generatedPaper: null }),
+  assignments: [],
+  setAssignments: (assignments) => set({ assignments }),
+  reset: () => set({ view: 'list', assignmentId: null, generatedPaper: null }),
 }));

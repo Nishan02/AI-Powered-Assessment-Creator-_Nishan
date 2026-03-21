@@ -39,6 +39,7 @@ export const assignmentWorker = new Worker(
         {
           status: 'completed',
           sections: aiResponse.sections,
+          duration: aiResponse.duration,
         },
         { new: true }
       );

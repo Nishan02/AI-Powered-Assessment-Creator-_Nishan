@@ -21,6 +21,7 @@ export interface IAssignment extends Document {
   totalMarks: number;
   additionalInstructions?: string;
   fileUrl?: string; // If you choose to store the uploaded file
+  duration?: string;
   status: 'pending' | 'processing' | 'completed' | 'failed';
   sections?: ISection[]; // Populated once AI generation is complete
   createdAt: Date;
@@ -47,6 +48,7 @@ const AssignmentSchema = new Schema<IAssignment>({
   totalMarks: { type: Number, required: true },
   additionalInstructions: { type: String },
   fileUrl: { type: String },
+  duration: { type: String },
   status: { 
     type: String, 
     enum: ['pending', 'processing', 'completed', 'failed'], 

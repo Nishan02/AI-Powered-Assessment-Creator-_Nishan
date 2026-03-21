@@ -42,7 +42,7 @@ export default function OutputPaper() {
 
         {/* Exam Meta Info */}
         <div className="flex justify-between text-sm font-medium mb-6">
-          <span>Time Allowed: 45 minutes</span>
+          <span>Time Allowed: {generatedPaper.duration || '1 Hour'}</span>
           <span>Maximum Marks: {generatedPaper.totalMarks}</span>
         </div>
 

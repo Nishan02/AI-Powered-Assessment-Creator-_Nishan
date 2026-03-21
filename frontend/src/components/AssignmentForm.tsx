@@ -23,18 +23,18 @@ export default function AssignmentForm() {
   const { setAssignmentId, setView } = useAssignmentStore();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const { register, control, handleSubmit, formState: { errors } } = useForm<IFormInput>({
+  const { register, control, handleSubmit, watch, formState: { errors } } = useForm<IFormInput>({
     defaultValues: {
       questionRows: [{ type: 'Multiple Choice Questions', count: 4, marks: 1 }],
     }
   });
+  const selectedFile = watch('file');
 
   const { fields, append, remove } = useFieldArray({
     control,
     name: 'questionRows',
   });
 
-  // Watch the rows to calculate totals on the fly
   const watchedRows = useWatch({ control, name: 'questionRows' });
   const totalQuestions = watchedRows?.reduce((acc, row) => acc + (Number(row.count) || 0), 0) || 0;
   const totalMarks = watchedRows?.reduce((acc, row) => acc + ((Number(row.count) || 0) * (Number(row.marks) || 0)), 0) || 0;
@@ -42,7 +42,6 @@ export default function AssignmentForm() {
   const onSubmit: SubmitHandler<IFormInput> = async (data) => {
     setIsSubmitting(true);
     try {
-      // Extract unique question types for the backend
       const questionTypes = Array.from(new Set(data.questionRows.map(r => r.type)));
 
       const formData = new FormData();
@@ -52,7 +51,6 @@ export default function AssignmentForm() {
       formData.append('totalQuestions', totalQuestions.toString());
       formData.append('totalMarks', totalMarks.toString());
       
-      // We'll append the detailed breakdown into the instructions so the AI knows exactly what to do
       const breakdownInfo = `Generate exactly: ${data.questionRows.map(r => `${r.count} ${r.type} (${r.marks} marks each)`).join(', ')}. `;
       const finalInstructions = breakdownInfo + (data.additionalInstructions || '');
       formData.append('additionalInstructions', finalInstructions);
@@ -88,20 +86,34 @@ export default function AssignmentForm() {
       
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
         
-        {/* File Upload Area */}
+{/* File Upload Area */}
         <div className="border-2 border-dashed border-gray-200 rounded-3xl p-10 flex flex-col items-center justify-center bg-gray-50/50 hover:bg-gray-50 transition-colors cursor-pointer relative">
           <input 
             type="file" 
             accept=".pdf,.txt" 
             {...register('file')} 
-            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20"
           />
-          <CloudUpload className="w-10 h-10 text-gray-400 mb-3" />
-          <p className="font-medium text-gray-700 text-sm">Choose a file or drag & drop it here</p>
-          <p className="text-xs text-gray-400 mt-1">JPEG, PNG, PDF, and MP4 formats, up to 50MB</p>
-          <button type="button" className="mt-4 px-4 py-2 bg-white border border-gray-200 rounded-full text-xs font-medium text-gray-700 shadow-sm pointer-events-none">
-            Browse Files
-          </button>
+          
+          <CloudUpload className={`w-10 h-10 mb-3 ${selectedFile && selectedFile.length > 0 ? 'text-green-500' : 'text-gray-400'}`} />
+          
+          {selectedFile && selectedFile.length > 0 ? (
+            <div className="text-center z-10 pointer-events-none">
+              <p className="font-bold text-green-600 text-sm">File Ready for AI</p>
+              <p className="text-gray-900 font-semibold text-sm mt-2 bg-white px-4 py-2 rounded-full border border-gray-200 shadow-sm inline-block">
+                📄 {selectedFile[0].name}
+              </p>
+              <p className="text-xs text-gray-400 mt-2">Click or drag again to replace</p>
+            </div>
+          ) : (
+            <div className="text-center z-10 pointer-events-none">
+              <p className="font-medium text-gray-900 text-sm">Choose a file or drag & drop it here</p>
+              <p className="text-xs text-gray-500 mt-1">PDF and TXT formats</p>
+              <button type="button" className="mt-4 px-4 py-2 bg-white border border-gray-200 rounded-full text-xs font-medium text-gray-900 shadow-sm">
+                Browse Files
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Title & Due Date Grid */}
@@ -111,7 +123,8 @@ export default function AssignmentForm() {
             <input
               type="text"
               {...register('title', { required: 'Required' })}
-              className="w-full px-4 py-3 bg-gray-50/50 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-gray-200 outline-none transition-all text-sm"
+              // Added text-gray-900 and placeholder:text-gray-400
+              className="w-full px-4 py-3 bg-gray-50/50 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-gray-200 outline-none transition-all text-sm text-gray-900 placeholder:text-gray-400 font-medium"
               placeholder="e.g., Data Structures"
             />
           </div>
@@ -120,7 +133,8 @@ export default function AssignmentForm() {
             <input
               type="date"
               {...register('dueDate', { required: 'Required' })}
-              className="w-full px-4 py-3 bg-gray-50/50 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-gray-200 outline-none transition-all text-sm text-gray-600"
+              // Added text-gray-900
+              className="w-full px-4 py-3 bg-gray-50/50 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-gray-200 outline-none transition-all text-sm text-gray-900 font-medium"
             />
           </div>
         </div>
@@ -138,7 +152,8 @@ export default function AssignmentForm() {
               <div key={field.id} className="flex items-center gap-3">
                 <select
                   {...register(`questionRows.${index}.type` as const)}
-                  className="flex-1 px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl outline-none text-sm text-gray-700 appearance-none"
+                  // Added text-gray-900
+                  className="flex-1 px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl outline-none text-sm text-gray-900 font-medium appearance-none"
                 >
                   <option value="Multiple Choice Questions">Multiple Choice Questions</option>
                   <option value="Short Questions">Short Questions</option>
@@ -159,14 +174,16 @@ export default function AssignmentForm() {
                   type="number"
                   min="1"
                   {...register(`questionRows.${index}.count` as const)}
-                  className="w-20 px-3 py-3 text-center bg-gray-50 border border-gray-200 rounded-2xl outline-none text-sm"
+                  // Added text-gray-900
+                  className="w-20 px-3 py-3 text-center bg-gray-50 border border-gray-200 rounded-2xl outline-none text-sm text-gray-900 font-semibold"
                 />
 
                 <input
                   type="number"
                   min="1"
                   {...register(`questionRows.${index}.marks` as const)}
-                  className="w-20 px-3 py-3 text-center bg-gray-50 border border-gray-200 rounded-2xl outline-none text-sm ml-1"
+                  // Added text-gray-900
+                  className="w-20 px-3 py-3 text-center bg-gray-50 border border-gray-200 rounded-2xl outline-none text-sm text-gray-900 font-semibold ml-1"
                 />
               </div>
             ))}
@@ -183,7 +200,7 @@ export default function AssignmentForm() {
         </div>
 
         {/* Totals Summary */}
-        <div className="flex flex-col items-end text-sm font-semibold text-gray-800 space-y-1 pr-2">
+        <div className="flex flex-col items-end text-sm font-bold text-gray-900 space-y-1 pr-2">
           <p>Total Questions: {totalQuestions}</p>
           <p>Total Marks: {totalMarks}</p>
         </div>
@@ -194,7 +211,8 @@ export default function AssignmentForm() {
           <textarea
             {...register('additionalInstructions')}
             rows={3}
-            className="w-full px-4 py-3 bg-gray-50/50 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-gray-200 outline-none transition-all text-sm resize-none"
+            // Added text-gray-900 and placeholder:text-gray-400
+            className="w-full px-4 py-3 bg-gray-50/50 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-gray-200 outline-none transition-all text-sm text-gray-900 placeholder:text-gray-400 font-medium resize-none"
             placeholder="e.g. Generate a question paper for 3 hour exam duration..."
           />
         </div>
@@ -204,7 +222,7 @@ export default function AssignmentForm() {
           <button
             type="button"
             onClick={() => setView('empty')}
-            className="flex items-center gap-2 px-6 py-3 border border-gray-200 rounded-full text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors"
+            className="flex items-center gap-2 px-6 py-3 border border-gray-200 rounded-full text-sm font-semibold text-gray-900 hover:bg-gray-50 transition-colors"
           >
             <ChevronLeft size={18} />
             Previous

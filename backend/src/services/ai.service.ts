@@ -33,6 +33,7 @@ export const generateAssessment = async (
 
     You must respond ONLY with a valid JSON object matching this exact structure:
     {
+      "duration": "String (Extract the time limit from the instructions, e.g., '3 Hours'. If not mentioned, default to '1 Hour')",
       "sections": [
         {
           "title": "String (e.g., 'Section A: Multiple Choice')",

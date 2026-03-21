@@ -45,3 +45,14 @@ export const createAssignment = async (req: Request, res: Response): Promise<voi
     res.status(500).json({ error: 'Internal server error' });
   }
 };
+
+export const getAssignments = async (req: Request, res: Response): Promise<void> => {
+  try {
+    // Fetch all assignments, sorted by newest first
+    const assignments = await Assignment.find().sort({ createdAt: -1 });
+    res.status(200).json(assignments);
+  } catch (error) {
+    console.error('Error fetching assignments:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
