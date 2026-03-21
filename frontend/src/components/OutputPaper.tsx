@@ -36,8 +36,8 @@ export default function OutputPaper() {
         filename: filename,
         image: { type: 'png' as const, quality: 0.98 },
         html2canvas: { scale: 2, useCORS: true },
-        jsPDF: { orientation: 'portrait', unit: 'mm', format: 'a4' },
-        pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+        jsPDF: { orientation: 'portrait' as const, unit: 'mm' as const, format: 'a4' as const },
+        pagebreak: { mode: ['avoid-all', 'css', 'legacy'] as const }
       };
 
       await html2pdf().set(options).from(element).save();
