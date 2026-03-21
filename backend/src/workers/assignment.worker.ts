@@ -45,9 +45,10 @@ export const assignmentWorker = new Worker(
       );
 
       // 5. Notify Frontend via WebSocket
+      console.log(`📍 Emitting 'generation-complete' event to room: ${assignmentId}`);
       io.to(assignmentId).emit('generation-complete', updatedAssignment);
       
-      console.log(`Job ${job.id} completed successfully!`);
+      console.log(`✅ Job ${job.id} completed successfully!`);
       return updatedAssignment;
 
     } catch (error) {

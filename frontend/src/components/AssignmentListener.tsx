@@ -1,42 +1,91 @@
 'use client';
 
-import { useEffect } from 'react';
-import { io } from 'socket.io-client';
+import { useEffect, useRef } from 'react';
+import { io, Socket } from 'socket.io-client';
 import { useAssignmentStore } from '@/store/useAssignmentStore';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
-const socket = io(API_URL);
+let socket: Socket | null = null;
+
+function getSocket(): Socket {
+  if (!socket) {
+    const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+    socket = io(API_URL, {
+      reconnection: true,
+      reconnectionDelay: 1000,
+      reconnectionDelayMax: 5000,
+      reconnectionAttempts: 5
+    });
+
+    socket.on('connect', () => {
+      console.log('✅ Socket connected:', socket?.id);
+    });
+
+    socket.on('disconnect', () => {
+      console.log('❌ Socket disconnected');
+    });
+
+    socket.on('connect_error', (error) => {
+      console.error('Socket connection error:', error);
+    });
+  }
+  return socket;
+}
 
 export default function AssignmentListener() {
   const { assignmentId, view, setView, setGeneratedPaper, upsertAssignment } = useAssignmentStore();
+  const assignmentIdRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (!assignmentId) return;
 
-    socket.emit('join-assignment-room', assignmentId);
+    const currentSocket = getSocket();
+    assignmentIdRef.current = assignmentId;
 
-    socket.on('generation-complete', (data) => {
-      upsertAssignment(data);
-      setGeneratedPaper(data);
-      setView('completed'); // Switch to the final output view!
-    });
+    // Wait for socket to be connected before joining room
+    const joinRoom = () => {
+      currentSocket.emit('join-assignment-room', assignmentId);
+      console.log(`📍 Joining assignment room: ${assignmentId}`);
+    };
 
-    socket.on('generation-failed', () => {
-      setView('failed');
-    });
+    if (currentSocket.connected) {
+      joinRoom();
+    } else {
+      currentSocket.once('connect', joinRoom);
+    }
+
+    // Handle generation complete
+    const handleGenerationComplete = (data: any) => {
+      console.log('✨ Generation complete:', data);
+      if (assignmentIdRef.current === assignmentId) {
+        upsertAssignment(data);
+        setGeneratedPaper(data);
+        setView('completed');
+      }
+    };
+
+    // Handle generation failed
+    const handleGenerationFailed = (error: any) => {
+      console.error('❌ Generation failed:', error);
+      if (assignmentIdRef.current === assignmentId) {
+        setView('failed');
+      }
+    };
+
+    currentSocket.on('generation-complete', handleGenerationComplete);
+    currentSocket.on('generation-failed', handleGenerationFailed);
 
     return () => {
-      socket.off('generation-complete');
-      socket.off('generation-failed');
+      currentSocket.off('generation-complete', handleGenerationComplete);
+      currentSocket.off('generation-failed', handleGenerationFailed);
     };
   }, [assignmentId, setView, setGeneratedPaper, upsertAssignment]);
 
   if (view === 'loading') {
     return (
-      <div className="flex flex-col items-center justify-center h-[60vh]">
-        <div className="w-16 h-16 border-4 border-gray-200 border-t-orange-500 rounded-full animate-spin mb-6"></div>
-        <h3 className="text-2xl font-bold text-gray-800">AI is drafting your assignment...</h3>
-        <p className="text-gray-500 mt-2">Reading syllabus and generating structured questions.</p>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '60vh' }}>
+        <div style={{ width: '64px', height: '64px', border: '4px solid #e5e7eb', borderTop: '4px solid #ea580c', borderRadius: '50%', animation: 'spin 1s linear infinite', marginBottom: '24px' }} ></div>
+        <h3 style={{ fontSize: '24px', fontWeight: 'bold', color: '#111827' }}>AI is drafting your assignment...</h3>
+        <p style={{ color: '#6b7280', marginTop: '8px' }}>Reading syllabus and generating structured questions.</p>
       </div>
     );
   }
