@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Bell, ArrowLeft, LogOut } from 'lucide-react';
+import { Bell, ArrowLeft, LogOut, Home, Users, Wrench, Library, Settings } from 'lucide-react';
 import Sidebar from '@/components/Sidebar';
 import EmptyState from '@/components/EmptyState';
 import AssignmentForm from '@/components/AssignmentForm';
@@ -15,7 +15,8 @@ export default function DashboardPage() {
   // Grab the auth variables from the store
   const { 
     view, setView, setAssignments, assignments, isAuthenticated, 
-    userName, logout, isGuest, ownerId, guestAssignmentIds, clearGuestAssignments
+    userName, logout, isGuest, ownerId, guestAssignmentIds, clearGuestAssignments,
+    sidebarSection, setSidebarSection
   } = useAssignmentStore();
   
   const [isLoading, setIsLoading] = useState(true);
@@ -79,6 +80,26 @@ export default function DashboardPage() {
   }
 
   // --- SHOW DASHBOARD IF LOGGED IN ---
+  const sectionTitleMap: Record<typeof sidebarSection, string> = {
+    home: 'Home',
+    groups: 'My Groups',
+    assignments: 'Assignment',
+    toolkit: "AI Teacher's Toolkit",
+    library: 'My Library',
+    settings: 'Settings',
+  };
+  const sectionTitle = sectionTitleMap[sidebarSection];
+  const isAssignmentsSection = sidebarSection === 'assignments';
+
+  const handleBack = () => {
+    if (!isAssignmentsSection) {
+      setSidebarSection('assignments');
+      setView(assignments.length > 0 ? 'list' : 'empty');
+      return;
+    }
+    setView(assignments.length > 0 ? 'list' : 'empty');
+  };
+
   return (
     <div className="flex h-screen bg-[#f8f9fa] overflow-hidden print:h-auto print:overflow-visible print:bg-white">
       <Sidebar />
@@ -88,12 +109,12 @@ export default function DashboardPage() {
         <header className="h-16 bg-white/50 backdrop-blur-sm border-b border-gray-200 flex items-center justify-between px-6 shrink-0 print:hidden z-30">
           <div className="flex items-center gap-2">
             <button 
-              onClick={() => assignments.length > 0 ? setView('list') : setView('empty')}
+              onClick={handleBack}
               className="p-1 hover:bg-gray-100 rounded-md text-gray-600 transition-colors"
             >
               <ArrowLeft size={20} />
             </button>
-            <span className="font-semibold text-gray-800 text-sm">Assignment</span>
+            <span className="font-semibold text-gray-800 text-sm">{sectionTitle}</span>
           </div>
 
           <div className="flex items-center gap-4">
@@ -117,19 +138,21 @@ export default function DashboardPage() {
         </header>
 
         <main className="flex-1 overflow-y-auto relative p-8 print:p-0 print:overflow-visible">
-          <AssignmentListener />
+          {isAssignmentsSection && <AssignmentListener />}
           
           {isLoading && (
             <div className="flex items-center justify-center h-full">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500"></div>
             </div>
           )}
-          
-          {!isLoading && view === 'empty' && <EmptyState />}
-          {!isLoading && view === 'list' && <AssignmentList />}
-          {view === 'form' && <div className="pb-20"><AssignmentForm /></div>}
-          
-          {view === 'completed' && (
+
+          {!isLoading && !isAssignmentsSection && <SectionPlaceholder section={sidebarSection} />}
+
+          {!isLoading && isAssignmentsSection && view === 'empty' && <EmptyState />}
+          {!isLoading && isAssignmentsSection && view === 'list' && <AssignmentList />}
+          {isAssignmentsSection && view === 'form' && <div className="pb-20"><AssignmentForm /></div>}
+
+          {isAssignmentsSection && view === 'completed' && (
             <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
               <OutputPaper />
               <div className="text-center mt-6">
@@ -143,6 +166,54 @@ export default function DashboardPage() {
             </div>
           )}
         </main>
+      </div>
+    </div>
+  );
+}
+
+function SectionPlaceholder({ section }: { section: 'home' | 'groups' | 'toolkit' | 'library' | 'settings' | 'assignments' }) {
+  const sectionMeta = {
+    home: {
+      icon: <Home size={22} />,
+      title: 'Home',
+      description: 'Your overall classroom dashboard and quick stats will appear here.',
+    },
+    groups: {
+      icon: <Users size={22} />,
+      title: 'My Groups',
+      description: 'Class groups and student group management will appear here.',
+    },
+    toolkit: {
+      icon: <Wrench size={22} />,
+      title: "AI Teacher's Toolkit",
+      description: 'AI utilities for worksheet creation, explanations, and feedback will appear here.',
+    },
+    library: {
+      icon: <Library size={22} />,
+      title: 'My Library',
+      description: 'Saved resources, templates, and reusable materials will appear here.',
+    },
+    settings: {
+      icon: <Settings size={22} />,
+      title: 'Settings',
+      description: 'Profile, account settings, and preferences will appear here.',
+    },
+    assignments: {
+      icon: <Home size={22} />,
+      title: 'Assignments',
+      description: 'Assignments section.',
+    },
+  };
+
+  const item = sectionMeta[section];
+  return (
+    <div className="h-full flex items-center justify-center">
+      <div className="max-w-lg w-full bg-white border border-gray-200 rounded-3xl p-8 text-center shadow-sm">
+        <div className="w-12 h-12 mx-auto rounded-xl bg-gray-100 text-gray-700 flex items-center justify-center mb-4">
+          {item.icon}
+        </div>
+        <h2 className="text-2xl font-bold text-gray-900 mb-2">{item.title}</h2>
+        <p className="text-sm text-gray-600 leading-relaxed">{item.description}</p>
       </div>
     </div>
   );

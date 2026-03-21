@@ -18,7 +18,7 @@ export default function EmptyState() {
         </div>
         {/* The Red X Magnifying Glass Mock */}
         <div className="absolute bottom-4 right-4 w-16 h-16 bg-white border-4 border-purple-100 rounded-full shadow-lg flex items-center justify-center z-20">
-           <div className="text-red-500 font-bold text-2xl">×</div>
+           <div className="text-red-500 font-bold text-2xl">X</div>
         </div>
       </div>
 

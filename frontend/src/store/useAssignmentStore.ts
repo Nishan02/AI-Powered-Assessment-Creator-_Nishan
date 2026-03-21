@@ -1,6 +1,8 @@
 import { create } from 'zustand';
 
 interface AssignmentState {
+  sidebarSection: 'home' | 'groups' | 'assignments' | 'toolkit' | 'library' | 'settings';
+
   // --- AUTH STATE ---
   isAuthenticated: boolean;
   schoolName: string;
@@ -17,6 +19,7 @@ interface AssignmentState {
 
   // --- EXISTING STATE ---
   view: 'empty' | 'list' | 'form' | 'loading' | 'completed' | 'failed';
+  setSidebarSection: (section: AssignmentState['sidebarSection']) => void;
   setView: (view: AssignmentState['view']) => void;
   assignmentId: string | null;
   setAssignmentId: (id: string) => void;
@@ -29,6 +32,7 @@ interface AssignmentState {
 }
 
 export const useAssignmentStore = create<AssignmentState>((set) => ({
+  sidebarSection: 'assignments',
   isAuthenticated: false,
   schoolName: '',
   userName: '',
@@ -50,6 +54,7 @@ export const useAssignmentStore = create<AssignmentState>((set) => ({
       userEmail: normalizedEmail,
       ownerId,
       isGuest,
+      sidebarSection: 'assignments',
       view: 'list',
       assignmentId: null,
       generatedPaper: null,
@@ -67,6 +72,7 @@ export const useAssignmentStore = create<AssignmentState>((set) => ({
       ownerId: '',
       isGuest: false,
       guestAssignmentIds: [],
+      sidebarSection: 'assignments',
       view: 'list',
       assignmentId: null,
       generatedPaper: null,
@@ -79,6 +85,7 @@ export const useAssignmentStore = create<AssignmentState>((set) => ({
   clearGuestAssignments: () => 
     set({ guestAssignmentIds: [] }),
 
+  setSidebarSection: (sidebarSection) => set({ sidebarSection }),
   view: 'list',
   setView: (view) => set({ view }),
   assignmentId: null,
