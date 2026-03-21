@@ -38,6 +38,8 @@ interface AssignmentState {
   setAssignments: (assignments: AssignmentRecord[]) => void;
   upsertAssignment: (assignment: AssignmentRecord) => void;
   removeAssignment: (id: string) => void;
+  generationError: string | null;
+  setGenerationError: (error: string | null) => void;
   reset: () => void;
 }
 
@@ -124,7 +126,9 @@ export const useAssignmentStore = create<AssignmentState>()(
         set((state) => ({
           assignments: state.assignments.filter((a) => a._id !== id),
         })),
-      reset: () => set({ view: 'list', assignmentId: null, generatedPaper: null }),
+      generationError: null,
+      setGenerationError: (error) => set({ generationError: error }),
+      reset: () => set({ view: 'list', assignmentId: null, generatedPaper: null, generationError: null }),
     }),
     {
       name: 'veda-assignment-store',

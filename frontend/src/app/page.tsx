@@ -43,6 +43,8 @@ export default function DashboardPage() {
     clearGuestAssignments,
     sidebarSection,
     setSidebarSection,
+    generationError,
+    setGenerationError,
   } = useAssignmentStore();
 
   const [isLoading, setIsLoading] = useState(true);
@@ -193,6 +195,36 @@ export default function DashboardPage() {
                   className="text-sm font-semibold text-gray-600 hover:text-gray-900 underline"
                 >
                   Back to Dashboard
+                </button>
+              </div>
+            </div>
+          )}
+          {isAssignmentsSection && view === 'loading' && (
+            <div className="flex flex-col items-center justify-center h-full gap-4">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
+              <p className="text-gray-600 font-medium">Generating your assignment...</p>
+            </div>
+          )}
+          {isAssignmentsSection && view === 'failed' && (
+            <div className="flex flex-col items-center justify-center h-full gap-6 max-w-md mx-auto text-center">
+              <div className="bg-red-100 p-6 rounded-2xl">
+                <p className="text-4xl">❌</p>
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-gray-900 mb-2">Generation Failed</h3>
+                <p className="text-gray-600 mb-4 whitespace-normal">
+                  {generationError || 'Your assignment could not be generated. Please try again later.'}
+                </p>
+              </div>
+              <div className="flex gap-3 justify-center flex-wrap">
+                <button
+                  onClick={() => {
+                    setGenerationError(null);
+                    setView('list');
+                  }}
+                  className="px-6 py-2 bg-gray-600 text-white rounded-full font-medium hover:bg-gray-700 transition-colors"
+                >
+                  Back to List
                 </button>
               </div>
             </div>

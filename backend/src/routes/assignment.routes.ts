@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import multer from 'multer';
-import { createAssignment ,getAssignments, deleteAssignment } from '../controllers/assignment.controller';
+import { createAssignment, getAssignments, deleteAssignment, regenerateAssignment } from '../controllers/assignment.controller';
 
 const router = Router();
 
@@ -11,5 +11,6 @@ const upload = multer({ dest: 'uploads/' });
 router.post('/', upload.single('file'), createAssignment);
 router.get('/', getAssignments);
 router.delete('/:id', deleteAssignment);
+router.post('/:id/regenerate', regenerateAssignment);
 
 export default router;

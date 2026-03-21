@@ -1,8 +1,8 @@
 'use client';
 
-import { Download } from 'lucide-react';
+import { Download, RefreshCw } from 'lucide-react';
 import { useAssignmentStore } from '@/store/useAssignmentStore';
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 
 interface QuestionOption {
   text?: string;
@@ -17,9 +17,26 @@ interface Section {
   questions?: QuestionOption[];
 }
 
+// Helper function to get difficulty color
+const getDifficultyColor = (difficulty?: string): { bg: string; text: string; border: string } => {
+  switch (difficulty?.toLowerCase()) {
+    case 'easy':
+      return { bg: '#c8e6c9', text: '#1b5e20', border: '#81c784' };
+    case 'challenging':
+    case 'hard':
+      return { bg: '#ffcdd2', text: '#b71c1c', border: '#e57373' };
+    default: // Moderate
+      return { bg: '#fff9c4', text: '#f57f17', border: '#fdd835' };
+  }
+};
+
 export default function OutputPaper() {
-  const { generatedPaper, schoolName } = useAssignmentStore();
+  const { generatedPaper, schoolName, assignmentId, setView, setGenerationError } = useAssignmentStore();
   const printableRef = useRef<HTMLDivElement>(null);
+  const [isRegenerating, setIsRegenerating] = useState(false);
+
+  // Get assignment ID from either store or generatedPaper (more reliable)
+  const currentAssignmentId = assignmentId || (generatedPaper as any)?._id;
 
   const handleDownloadPDF = async () => {
     if (!printableRef.current) return;
@@ -47,6 +64,40 @@ export default function OutputPaper() {
     }
   };
 
+  const handleRegenerate = async () => {
+    if (!currentAssignmentId) {
+      console.error('Assignment ID not found:', { assignmentId, generatedPaperId: (generatedPaper as any)?._id });
+      alert('Assignment ID not found. Please refresh the page.');
+      return;
+    }
+    
+    setIsRegenerating(true);
+    setGenerationError(null); // Clear any previous errors
+    try {
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+      console.log(`🔄 Regenerating assignment: ${currentAssignmentId}`);
+      
+      // Trigger regeneration of the same assignment
+      const response = await fetch(`${API_URL}/api/assignments/${currentAssignmentId}/regenerate`, {
+        method: 'POST'
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to regenerate assignment');
+      }
+
+      console.log('✅ Regeneration job queued successfully');
+      
+      // Switch to loading state
+      setView('loading');
+    } catch (error) {
+      console.error('Error regenerating assignment:', error);
+      alert(`Failed to regenerate assignment. ${error instanceof Error ? error.message : 'Please try again.'}`);
+      setIsRegenerating(false);
+    }
+  };
+
   if (!generatedPaper) return null;
 
   const sections: Section[] = generatedPaper.sections || [];
@@ -59,13 +110,23 @@ export default function OutputPaper() {
         <p className="text-xs md:text-sm font-medium leading-relaxed max-w-2xl">
           Here is your customized question paper generated from your assignment inputs.
         </p>
-        <button
-          onClick={handleDownloadPDF}
-          className="bg-white text-black px-4 py-2 rounded-full font-medium text-sm flex items-center gap-2 hover:bg-gray-100 transition-colors"
-        >
-          <Download size={16} />
-          Download as PDF
-        </button>
+        <div className="flex gap-2 flex-wrap">
+          <button
+            onClick={handleRegenerate}
+            disabled={isRegenerating}
+            className="bg-orange-500 text-white px-4 py-2 rounded-full font-medium text-sm flex items-center gap-2 hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            <RefreshCw size={16} className={isRegenerating ? 'animate-spin' : ''} />
+            Regenerate
+          </button>
+          <button
+            onClick={handleDownloadPDF}
+            className="bg-white text-black px-4 py-2 rounded-full font-medium text-sm flex items-center gap-2 hover:bg-gray-100 transition-colors"
+          >
+            <Download size={16} />
+            Download as PDF
+          </button>
+        </div>
       </div>
 
       <div 
@@ -134,33 +195,58 @@ export default function OutputPaper() {
               </div>
 
               <div>
-                {section.questions?.map((q, qIndex) => (
-                  <div key={qIndex} style={{ display: 'flex', gap: '8px', marginBottom: '16px', fontSize: '13px', lineHeight: '1.6' }}>
-                    <span style={{ fontWeight: '500', flex: '0 0 auto' }}>{qIndex + 1}.</span>
-                    <div>
-                      <span style={{ fontWeight: '500', marginRight: '8px', color: '#000' }}>
-                        [{q.difficulty || 'Moderate'}]
-                      </span>
-                      <span style={{ color: '#000' }}>{q.text}</span>
-                      <span style={{ fontWeight: 'bold', marginLeft: '8px', color: '#000' }}>
-                        [{q.marks || 1} Marks]
-                      </span>
-
-                      {q.options && q.options.length > 0 && (
-                        <div style={{ marginTop: '8px', paddingLeft: '16px' }}>
-                          {q.options.map((opt: string, optIndex: number) => (
-                            <div key={optIndex} style={{ color: '#000', marginBottom: '4px' }}>
-                              <span style={{ fontWeight: '500', marginRight: '8px' }}>
-                                {String.fromCharCode(97 + optIndex)})
-                              </span>
-                              {opt}
-                            </div>
-                          ))}
+                {section.questions?.map((q, qIndex) => {
+                  const diffColor = getDifficultyColor(q.difficulty);
+                  return (
+                    <div key={qIndex} style={{ display: 'flex', gap: '8px', marginBottom: '16px', fontSize: '13px', lineHeight: '1.6' }}>
+                      <span style={{ fontWeight: '500', flex: '0 0 auto' }}>{qIndex + 1}.</span>
+                      <div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                          {/* Difficulty Badge */}
+                          <span style={{
+                            backgroundColor: diffColor.bg,
+                            color: diffColor.text,
+                            border: `1px solid ${diffColor.border}`,
+                            padding: '2px 8px',
+                            borderRadius: '12px',
+                            fontSize: '11px',
+                            fontWeight: '600',
+                            display: 'inline-block'
+                          }}>
+                            {q.difficulty || 'Moderate'}
+                          </span>
+                          {/* Marks Badge */}
+                          <span style={{
+                            backgroundColor: '#e8f5e9',
+                            color: '#1b5e20',
+                            border: '1px solid #81c784',
+                            padding: '2px 8px',
+                            borderRadius: '12px',
+                            fontSize: '11px',
+                            fontWeight: '600',
+                            display: 'inline-block'
+                          }}>
+                            {q.marks || 1} Marks
+                          </span>
                         </div>
-                      )}
+                        <span style={{ color: '#000' }}>{q.text}</span>
+
+                        {q.options && q.options.length > 0 && (
+                          <div style={{ marginTop: '8px', paddingLeft: '16px' }}>
+                            {q.options.map((opt: string, optIndex: number) => (
+                              <div key={optIndex} style={{ color: '#000', marginBottom: '4px' }}>
+                                <span style={{ fontWeight: '500', marginRight: '8px' }}>
+                                  {String.fromCharCode(97 + optIndex)})
+                                </span>
+                                {opt}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           ))}

@@ -66,23 +66,34 @@ cd ../backend && npm install
 
 2. **Configure backend (.env):**
 ```
-MONGODB_URI=mongodb://localhost:27017/vedaai
-REDIS_URL=redis://localhost:6379
-OPENAI_API_KEY=your_key_here
 PORT=5000
+MONGO_URI=mongodb://localhost:27017/vedaai
+REDIS_URL=redis://localhost:6379
+GEMINI_API_KEY=your_gemini_api_key
+```
+
+3. **Configure frontend (.env.local):**
+```
+NEXT_PUBLIC_API_URL=http://localhost:5000
 ```
 
 ### Running Locally
 
-```bash
-# Terminal 1: Backend
-cd backend && npm run dev
+1. **Start MongoDB and Redis** (if using local instances)
 
-# Terminal 2: Frontend  
+2. **Terminal 1: Backend**
+```bash
+cd backend && npm run dev
+```
+Backend will run on `http://localhost:5000`
+
+3. **Terminal 2: Frontend**
+```bash
 cd frontend && npm run dev
 ```
+Frontend will run on `http://localhost:3000`
 
-Access at `http://localhost:3000`
+**Important:** The frontend uses `NEXT_PUBLIC_API_URL` from `.env.local` to connect to the backend. Make sure it's set to `http://localhost:5000` for local development.
 
 ## How It Works
 
@@ -143,6 +154,23 @@ Access at `http://localhost:3000`
 - Format code with Prettier
 - Test on desktop and mobile before committing
 - Keep changes focused and well-documented
+
+## Troubleshooting
+
+**Failed to fetch assignments error:**
+- Ensure backend is running on port 5000
+- Verify `NEXT_PUBLIC_API_URL` in frontend `.env.local` is set to `http://localhost:5000`
+- Check that frontend and backend are on the same machine or network
+- Clear browser cache and refresh the page
+
+**MongoDB connection failed:**
+- Ensure MongoDB service is running
+- Check `MONGO_URI` in backend `.env` is correct
+- Verify database credentials if using cloud MongoDB
+
+**Redis connection failed:**
+- Ensure Redis service is running
+- Check `REDIS_URL` in backend `.env` is correct
 
 ## Future Enhancements
 

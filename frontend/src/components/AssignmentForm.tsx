@@ -21,7 +21,7 @@ interface IFormInput {
 }
 
 export default function AssignmentForm() {
-  const { setAssignmentId, setView, setAssignments, isGuest, ownerId, addGuestAssignmentId } = useAssignmentStore();
+  const { setAssignmentId, setView, setAssignments, isGuest, ownerId, addGuestAssignmentId, setGenerationError } = useAssignmentStore();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { register, control, handleSubmit, watch } = useForm<IFormInput>({
@@ -42,6 +42,7 @@ export default function AssignmentForm() {
 
   const onSubmit: SubmitHandler<IFormInput> = async (data) => {
     setIsSubmitting(true);
+    setGenerationError(null); // Clear any previous errors
     try {
       if (!ownerId) throw new Error('Missing owner identity');
 

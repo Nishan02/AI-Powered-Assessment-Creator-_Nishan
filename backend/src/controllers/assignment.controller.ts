@@ -91,3 +91,59 @@ export const deleteAssignment = async (req: Request, res: Response): Promise<voi
     res.status(500).json({ error: 'Internal server error' });
   }
 };
+
+export const regenerateAssignment = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    console.log(`🔄 Regenerating assignment: ${id}`);
+
+    // Find the assignment to regenerate
+    const assignment = await Assignment.findById(id);
+    if (!assignment) {
+      console.error(`❌ Assignment not found: ${id}`);
+      res.status(404).json({ error: 'Assignment not found' });
+      return;
+    }
+
+    console.log(`✅ Found assignment: ${id}, resetting status...`);
+
+    // Reset the assignment status for re-generation
+    const updatedAssignment = await Assignment.findByIdAndUpdate(
+      id,
+      { status: 'pending', sections: [] },
+      { new: true }
+    );
+
+    if (!updatedAssignment) {
+      console.error(`❌ Failed to update assignment: ${id}`);
+      res.status(500).json({ error: 'Failed to update assignment' });
+      return;
+    }
+
+    console.log(`📍 Queueing regeneration job for: ${id}`);
+
+    // Re-queue the generation job with same parameters
+    await assignmentQueue.add('generate-questions', {
+      assignmentId: updatedAssignment._id,
+      fileUrl: updatedAssignment.fileUrl,
+      title: updatedAssignment.title,
+      className: updatedAssignment.className,
+      questionTypes: updatedAssignment.questionTypes,
+      totalQuestions: updatedAssignment.totalQuestions,
+      totalMarks: updatedAssignment.totalMarks,
+      additionalInstructions: updatedAssignment.additionalInstructions
+    });
+
+    console.log(`✅ Regeneration job queued: ${id}`);
+
+    // Return immediate response
+    res.status(202).json({
+      message: 'Assignment queued for regeneration',
+      assignmentId: id
+    });
+
+  } catch (error) {
+    console.error('❌ Error regenerating assignment:', error instanceof Error ? error.message : error);
+    res.status(500).json({ error: error instanceof Error ? error.message : 'Internal server error' });
+  }
+};

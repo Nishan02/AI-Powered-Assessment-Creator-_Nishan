@@ -32,53 +32,77 @@ function getSocket(): Socket {
 }
 
 export default function AssignmentListener() {
-  const { assignmentId, view, setView, setGeneratedPaper, upsertAssignment } = useAssignmentStore();
+  const { assignmentId, view, setView, setGeneratedPaper, upsertAssignment, setGenerationError } = useAssignmentStore();
   const assignmentIdRef = useRef<string | null>(null);
+  const eventHandlersRef = useRef<{ complete?: Function; failed?: Function }>({});
 
   useEffect(() => {
-    if (!assignmentId) return;
+    // Only run when we're in loading state
+    if (view !== 'loading' || !assignmentId) {
+      console.log(`⏸️ AssignmentListener paused (view: ${view}, assignmentId: ${assignmentId})`);
+      return;
+    }
 
     const currentSocket = getSocket();
     assignmentIdRef.current = assignmentId;
 
-    // Wait for socket to be connected before joining room
+    console.log(`🔄 AssignmentListener: Activating for assignment ${assignmentId}`);
+
+    // Join the room
     const joinRoom = () => {
+      console.log(`📍 Emitting join-assignment-room for: ${assignmentId}`);
       currentSocket.emit('join-assignment-room', assignmentId);
-      console.log(`📍 Joining assignment room: ${assignmentId}`);
     };
 
     if (currentSocket.connected) {
       joinRoom();
     } else {
-      currentSocket.once('connect', joinRoom);
+      console.log('⚠️ Socket not connected yet, waiting for connection...');
+      currentSocket.once('connect', () => {
+        console.log('✅ Socket connected, now joining room');
+        joinRoom();
+      });
     }
 
     // Handle generation complete
     const handleGenerationComplete = (data: any) => {
-      console.log('✨ Generation complete:', data);
+      console.log('✨ Generation complete event received:', data);
       if (assignmentIdRef.current === assignmentId) {
+        console.log('✅ Updating store with completed assignment');
         upsertAssignment(data);
         setGeneratedPaper(data);
         setView('completed');
+      } else {
+        console.warn(`⚠️ Assignment ID mismatch: expected ${assignmentId}, got ${assignmentIdRef.current}`);
       }
     };
 
     // Handle generation failed
-    const handleGenerationFailed = (error: any) => {
-      console.error('❌ Generation failed:', error);
+    const handleGenerationFailed = (data: any) => {
+      const errorMessage = data?.error || 'Failed to generate assignment';
+      console.error('❌ Generation failed event received:', errorMessage);
       if (assignmentIdRef.current === assignmentId) {
+        setGenerationError(errorMessage);
         setView('failed');
       }
     };
 
+    // Store handlers for cleanup
+    eventHandlersRef.current = { complete: handleGenerationComplete, failed: handleGenerationFailed };
+
+    // Register listeners
     currentSocket.on('generation-complete', handleGenerationComplete);
     currentSocket.on('generation-failed', handleGenerationFailed);
 
+    // Log socket status
+    console.log(`🔌 Socket status: connected=${currentSocket.connected}, id=${currentSocket.id}`);
+
     return () => {
+      console.log(`🧹 Cleaning up listeners for assignment ${assignmentId}`);
       currentSocket.off('generation-complete', handleGenerationComplete);
       currentSocket.off('generation-failed', handleGenerationFailed);
     };
-  }, [assignmentId, setView, setGeneratedPaper, upsertAssignment]);
+  }, [assignmentId, view, setView, setGeneratedPaper, upsertAssignment]);
 
   if (view === 'loading') {
     return (
