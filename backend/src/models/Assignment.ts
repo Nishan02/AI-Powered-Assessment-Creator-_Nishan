@@ -14,6 +14,7 @@ export interface ISection {
 }
 
 export interface IAssignment extends Document {
+  ownerId: string;
   title: string;
   dueDate: Date;
   questionTypes: string[];
@@ -41,6 +42,7 @@ const SectionSchema = new Schema<ISection>({
 });
 
 const AssignmentSchema = new Schema<IAssignment>({
+  ownerId: { type: String, required: true, index: true },
   title: { type: String, required: true },
   dueDate: { type: Date, required: true },
   questionTypes: [{ type: String }],

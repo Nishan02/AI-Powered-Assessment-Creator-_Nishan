@@ -4,13 +4,18 @@ import { assignmentQueue } from '../config/queue';
 
 export const createAssignment = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { title, dueDate, questionTypes, totalQuestions, totalMarks, additionalInstructions } = req.body;
+    const { ownerId, title, dueDate, questionTypes, totalQuestions, totalMarks, additionalInstructions } = req.body;
+    if (!ownerId || typeof ownerId !== 'string') {
+      res.status(400).json({ error: 'ownerId is required' });
+      return;
+    }
     
     // Check if a file was uploaded
     const fileUrl = req.file ? req.file.path : undefined;
 
     // 1. Save initial pending state to MongoDB
     const newAssignment = new Assignment({
+      ownerId: ownerId.trim(),
       title,
       dueDate,
       questionTypes: JSON.parse(questionTypes || '[]'), // Assuming frontend sends stringified array in FormData
@@ -48,8 +53,14 @@ export const createAssignment = async (req: Request, res: Response): Promise<voi
 
 export const getAssignments = async (req: Request, res: Response): Promise<void> => {
   try {
-    // Fetch all assignments, sorted by newest first
-    const assignments = await Assignment.find().sort({ createdAt: -1 });
+    const ownerId = typeof req.query.ownerId === 'string' ? req.query.ownerId.trim() : '';
+    if (!ownerId) {
+      res.status(400).json({ error: 'ownerId query parameter is required' });
+      return;
+    }
+
+    // Fetch only this owner's assignments, sorted by newest first
+    const assignments = await Assignment.find({ ownerId }).sort({ createdAt: -1 });
     res.status(200).json(assignments);
   } catch (error) {
     console.error('Error fetching assignments:', error);
@@ -60,7 +71,18 @@ export const getAssignments = async (req: Request, res: Response): Promise<void>
 export const deleteAssignment = async (req: Request, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
-    await Assignment.findByIdAndDelete(id);
+    const ownerId = typeof req.query.ownerId === 'string' ? req.query.ownerId.trim() : '';
+    if (!ownerId) {
+      res.status(400).json({ error: 'ownerId query parameter is required' });
+      return;
+    }
+
+    const deletedAssignment = await Assignment.findOneAndDelete({ _id: id, ownerId });
+    if (!deletedAssignment) {
+      res.status(404).json({ error: 'Assignment not found' });
+      return;
+    }
+
     res.status(200).json({ message: 'Assignment deleted successfully' });
   } catch (error) {
     console.error('Error deleting assignment:', error);

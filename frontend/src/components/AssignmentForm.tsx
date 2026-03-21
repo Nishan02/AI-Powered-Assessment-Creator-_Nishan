@@ -20,7 +20,7 @@ interface IFormInput {
 }
 
 export default function AssignmentForm() {
-  const { setAssignmentId, setView } = useAssignmentStore();
+  const { setAssignmentId, setView, isGuest, ownerId, addGuestAssignmentId } = useAssignmentStore();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { register, control, handleSubmit, watch, formState: { errors } } = useForm<IFormInput>({
@@ -42,6 +42,8 @@ export default function AssignmentForm() {
   const onSubmit: SubmitHandler<IFormInput> = async (data) => {
     setIsSubmitting(true);
     try {
+      if (!ownerId) throw new Error('Missing owner identity');
+
       const questionTypes = Array.from(new Set(data.questionRows.map(r => r.type)));
 
       const formData = new FormData();
@@ -50,6 +52,7 @@ export default function AssignmentForm() {
       formData.append('questionTypes', JSON.stringify(questionTypes));
       formData.append('totalQuestions', totalQuestions.toString());
       formData.append('totalMarks', totalMarks.toString());
+      formData.append('ownerId', ownerId);
       
       const breakdownInfo = `Generate exactly: ${data.questionRows.map(r => `${r.count} ${r.type} (${r.marks} marks each)`).join(', ')}. `;
       const finalInstructions = breakdownInfo + (data.additionalInstructions || '');
@@ -66,6 +69,8 @@ export default function AssignmentForm() {
 
       const result = await response.json();
       setAssignmentId(result.assignmentId);
+
+      if (isGuest) addGuestAssignmentId(result.assignmentId);
       setView('loading');
       
     } catch (error) {

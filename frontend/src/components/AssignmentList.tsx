@@ -5,7 +5,7 @@ import { Search, Filter, MoreVertical, Plus } from 'lucide-react';
 import { useAssignmentStore } from '@/store/useAssignmentStore';
 
 export default function AssignmentList() {
-  const { assignments, setView, setGeneratedPaper, removeAssignment } = useAssignmentStore();
+  const { assignments, setView, setGeneratedPaper, removeAssignment, ownerId } = useAssignmentStore();
   
   // State for Search and Filter
   const [searchQuery, setSearchQuery] = useState('');
@@ -27,9 +27,13 @@ export default function AssignmentList() {
 
   const handleDelete = async (id: string) => {
     if (!window.confirm('Are you sure you want to delete this assignment?')) return;
+    if (!ownerId) {
+      alert('Session error. Please log in again.');
+      return;
+    }
     
     try {
-      const response = await fetch(`http://localhost:5000/api/assignments/${id}`, {
+      const response = await fetch(`http://localhost:5000/api/assignments/${id}?ownerId=${encodeURIComponent(ownerId)}`, {
         method: 'DELETE',
       });
       
