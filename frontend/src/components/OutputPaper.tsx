@@ -9,6 +9,7 @@ interface QuestionOption {
   options?: string[];
   difficulty?: string;
   marks?: number;
+  answer?: string;
 }
 
 interface Section {
@@ -17,16 +18,16 @@ interface Section {
   questions?: QuestionOption[];
 }
 
-// Helper function to get difficulty color
-const getDifficultyColor = (difficulty?: string): { bg: string; text: string; border: string } => {
+// Helper function to get difficulty text color
+const getDifficultyColor = (difficulty?: string): string => {
   switch (difficulty?.toLowerCase()) {
     case 'easy':
-      return { bg: '#c8e6c9', text: '#1b5e20', border: '#81c784' };
+      return '#1b5e20';
     case 'challenging':
     case 'hard':
-      return { bg: '#ffcdd2', text: '#b71c1c', border: '#e57373' };
+      return '#b71c1c';
     default: // Moderate
-      return { bg: '#fff9c4', text: '#f57f17', border: '#fdd835' };
+      return '#f57f17';
   }
 };
 
@@ -104,6 +105,9 @@ export default function OutputPaper() {
   const sections: Section[] = generatedPaper.sections || [];
   const selectedClass = generatedPaper.className || 'Not specified';
   const selectedSchool = schoolName || 'School Name';
+  const allQuestions = sections.flatMap((section) => section.questions || []);
+  const answerKeyItems = allQuestions.map((question) => question.answer?.trim() || '');
+  const hasAnyAnswer = answerKeyItems.some((answer) => answer.length > 0);
 
   return (
     <div className="w-full max-w-5xl mx-auto mt-4 mb-20 rounded-3xl overflow-hidden shadow-xl border border-gray-200">
@@ -201,36 +205,18 @@ export default function OutputPaper() {
                   return (
                     <div key={qIndex} style={{ display: 'flex', gap: '8px', marginBottom: '16px', fontSize: '13px', lineHeight: '1.6' }}>
                       <span style={{ fontWeight: '500', flex: '0 0 auto' }}>{qIndex + 1}.</span>
-                      <div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                          {/* Difficulty Badge */}
-                          <span style={{
-                            backgroundColor: diffColor.bg,
-                            color: diffColor.text,
-                            border: `1px solid ${diffColor.border}`,
-                            padding: '2px 8px',
-                            borderRadius: '12px',
-                            fontSize: '11px',
-                            fontWeight: '600',
-                            display: 'inline-block'
-                          }}>
-                            {q.difficulty || 'Moderate'}
+                      <div style={{ flex: 1 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
+                          <span style={{ color: '#000' }}>
+                            <span style={{ color: diffColor, fontWeight: '600' }}>
+                              [{q.difficulty || 'Moderate'}]
+                            </span>{' '}
+                            {q.text}
                           </span>
-                          {/* Marks Badge */}
-                          <span style={{
-                            backgroundColor: '#e8f5e9',
-                            color: '#1b5e20',
-                            border: '1px solid #81c784',
-                            padding: '2px 8px',
-                            borderRadius: '12px',
-                            fontSize: '11px',
-                            fontWeight: '600',
-                            display: 'inline-block'
-                          }}>
-                            {q.marks || 1} Marks
+                          <span style={{ color: '#000', whiteSpace: 'nowrap' }}>
+                            [{q.marks || 1} Marks]
                           </span>
                         </div>
-                        <span style={{ color: '#000' }}>{q.text}</span>
 
                         {q.options && q.options.length > 0 && (
                           <div style={{ marginTop: '8px', paddingLeft: '16px' }}>
@@ -256,6 +242,39 @@ export default function OutputPaper() {
         <div style={{ marginTop: '48px', textAlign: 'center', fontSize: '13px', fontWeight: 'bold', color: '#000' }}>
           End of Question Paper
         </div>
+
+        {allQuestions.length > 0 && (
+          <div style={{ marginTop: '44px' }}>
+            <h3 style={{ fontSize: '32px', fontWeight: '700', color: '#000', margin: '0 0 14px 0' }}>
+              Answer Key:
+            </h3>
+            {!hasAnyAnswer ? (
+              <p style={{ color: '#000', fontSize: '13px', margin: 0 }}>
+                Answers unavailable in this older generation. Regenerate once to fetch full answer key.
+              </p>
+            ) : (
+              <div>
+                {answerKeyItems.map((answer, index) => (
+                  <div
+                    key={index}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'flex-start',
+                      gap: '8px',
+                      marginBottom: '10px',
+                      color: '#000',
+                      fontSize: '13px',
+                      lineHeight: '1.5'
+                    }}
+                  >
+                    <span style={{ flex: '0 0 auto' }}>{index + 1}.</span>
+                    <span>{answer || 'Model answer unavailable for this question.'}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

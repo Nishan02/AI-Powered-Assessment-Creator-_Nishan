@@ -5,6 +5,7 @@ export interface IQuestion {
   difficulty: 'Easy' | 'Moderate' | 'Challenging';
   marks: number;
   options?: string[];
+  answer?: string;
 }
 
 export interface ISection {
@@ -33,7 +34,8 @@ const QuestionSchema = new Schema<IQuestion>({
   text: { type: String, required: true },
   difficulty: { type: String, enum: ['Easy', 'Moderate', 'Challenging'], required: true },
   marks: { type: Number, required: true },
-  options: [{ type: String }]
+  options: [{ type: String }],
+  answer: { type: String }
 });
 
 const SectionSchema = new Schema<ISection>({
