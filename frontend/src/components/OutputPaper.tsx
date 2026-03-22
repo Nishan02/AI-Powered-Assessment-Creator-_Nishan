@@ -31,12 +31,12 @@ const getDifficultyColor = (difficulty?: string): { bg: string; text: string; bo
 };
 
 export default function OutputPaper() {
-  const { generatedPaper, schoolName, assignmentId, setView, setGenerationError } = useAssignmentStore();
+  const { generatedPaper, schoolName, assignmentId, setAssignmentId, setView, setGenerationError } = useAssignmentStore();
   const printableRef = useRef<HTMLDivElement>(null);
   const [isRegenerating, setIsRegenerating] = useState(false);
 
-  // Get assignment ID from either store or generatedPaper (more reliable)
-  const currentAssignmentId = assignmentId || (generatedPaper as any)?._id;
+  // Always prioritize the assignment currently displayed in this view.
+  const currentAssignmentId = (generatedPaper as any)?._id || assignmentId;
 
   const handleDownloadPDF = async () => {
     if (!printableRef.current) return;
@@ -88,7 +88,8 @@ export default function OutputPaper() {
       }
 
       console.log('✅ Regeneration job queued successfully');
-      
+      setAssignmentId(currentAssignmentId);
+
       // Switch to loading state
       setView('loading');
     } catch (error) {

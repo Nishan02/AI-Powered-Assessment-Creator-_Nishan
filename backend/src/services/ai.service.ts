@@ -17,6 +17,21 @@ export const generateAssessment = async (
     },
   });
 
+  const hasContext = Boolean(contextText?.trim());
+  const syllabusConstraint = hasContext
+    ? `
+    STRICT SYLLABUS BOUNDARY:
+    - Use only the provided Context/Source Material to create questions.
+    - Do not introduce topics that are not present in the source material.
+    - If source text is noisy, still stay anchored to the assignment title, class, and instructions.
+    - Never switch to unrelated domains (for example: astronomy for a DSA assignment).
+    `
+    : `
+    STRICT TOPIC BOUNDARY:
+    - Keep every question strictly within this assignment topic: "${assignmentDetails.title}".
+    - Follow class level and instructions; do not introduce unrelated subjects.
+    `;
+
   const prompt = `
     You are an expert educational assessment creator.
     Generate a highly structured question paper based on the following requirements:
@@ -28,6 +43,7 @@ export const generateAssessment = async (
     Total Questions: ${assignmentDetails.totalQuestions}
     Total Marks: ${assignmentDetails.totalMarks}
     Additional Instructions: ${assignmentDetails.additionalInstructions || 'None'}
+    ${syllabusConstraint}
 
     Distribute the total questions and total marks logically across different sections (e.g., Section A, Section B).
     Assign a difficulty level ('Easy', 'Moderate', 'Hard') to each question.

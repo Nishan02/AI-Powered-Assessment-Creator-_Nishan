@@ -14,7 +14,7 @@ interface Assignment {
 }
 
 export default function AssignmentList() {
-  const { assignments, setView, setGeneratedPaper, removeAssignment, ownerId } = useAssignmentStore();
+  const { assignments, setView, setAssignmentId, setGeneratedPaper, removeAssignment, ownerId } = useAssignmentStore();
   const [searchQuery, setSearchQuery] = useState('');
   const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
@@ -38,6 +38,7 @@ export default function AssignmentList() {
 
   const handleView = (assignment: Assignment) => {
     if (assignment.status === 'completed' && assignment.sections) {
+      setAssignmentId(assignment._id);
       setGeneratedPaper(assignment);
       setView('completed');
     } else {
