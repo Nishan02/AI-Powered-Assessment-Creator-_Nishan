@@ -315,7 +315,7 @@ function MobileHeader({
       <div className="bg-white rounded-2xl px-3 py-2 flex items-center justify-between mb-2 shadow-sm">
         <div className="flex items-center gap-2">
           <BrandLogo size={24} />
-          <div className="font-bold text-[30px] leading-none text-gray-900">VedaAI</div>
+          <div className="font-bold text-[30px] leading-none text-gray-900">Assessment AI</div>
         </div>
         <div className="flex items-center gap-3">
           <div className="relative">
